@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find My Co-pilot — Asher</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { serif: ['Playfair Display','serif'], sans: ['Inter','Noto Sans SC','sans-serif'] },
+          colors: {
+            cream: '#faf8f5', warm: { 50:'#fdf8f0', 100:'#f9eed8', 200:'#f0dbb4', 400:'#d4a056', 500:'#c4883c', 600:'#a06b2d' },
+            stone: { 50:'#fafaf9', 100:'#f5f5f4', 200:'#e7e5e4', 300:'#d6d3d1', 400:'#a8a29e', 500:'#78716c', 600:'#57534e', 700:'#44403c', 800:'#292524', 900:'#1c1917' },
+            accent: '#e07a3a',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter','Noto Sans SC',sans-serif;background:#faf8f5;color:#292524;overflow-x:hidden}
+    ::-webkit-scrollbar{width:4px}
+    ::-webkit-scrollbar-track{background:#faf8f5}
+    ::-webkit-scrollbar-thumb{background:#d6d3d1;border-radius:2px}
+    ::selection{background:#e07a3a20;color:#292524}
+
+    /* Scroll progress bar */
+    #scrollProgress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#e07a3a,#d4a056,#c4883c);z-index:9999;width:0%;transition:width 0.1s linear;box-shadow:0 0 10px rgba(224,122,58,0.5)}
+
+    /* Subtle gradient blobs */
+    .blob{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;animation:blobFloat 25s ease-in-out infinite}
+    @keyframes blobFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-20px) scale(1.05)}66%{transform:translate(-20px,30px) scale(0.95)}}
+
+    /* Falling petals & hearts */
+    .petal{position:fixed;pointer-events:none;z-index:0;opacity:0;animation:petalFall linear infinite}
+    .petal-shape{display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.1))}
+    @keyframes petalFall{
+      0%{transform:translateY(-5vh) translateX(0) rotate(0deg) scale(1);opacity:0}
+      5%{opacity:0.9}
+      25%{transform:translateY(25vh) translateX(30px) rotate(90deg) scale(0.95)}
+      50%{transform:translateY(50vh) translateX(-20px) rotate(180deg) scale(1.05)}
+      75%{transform:translateY(75vh) translateX(40px) rotate(270deg) scale(0.9)}
+      95%{opacity:0.8}
+      100%{transform:translateY(105vh) translateX(10px) rotate(360deg) scale(1);opacity:0}
+    }
+    /* Heart beat on hover for the whole page vibe */
+    @keyframes heartPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+    /* Reveal with stagger support */
+    .reveal{opacity:0;transform:translateY(30px);transition:opacity 0.8s cubic-bezier(0.16,1,0.3,1),transform 0.8s cubic-bezier(0.16,1,0.3,1)}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .reveal[data-delay="1"]{transition-delay:0.1s}
+    .reveal[data-delay="2"]{transition-delay:0.2s}
+    .reveal[data-delay="3"]{transition-delay:0.3s}
+    .reveal[data-delay="4"]{transition-delay:0.4s}
+    .reveal[data-delay="5"]{transition-delay:0.5s}
+    .reveal[data-delay="6"]{transition-delay:0.6s}
+    .reveal[data-delay="7"]{transition-delay:0.7s}
+
+    /* Cards with 3D tilt */
+    .card{background:white;border:1px solid #e7e5e4;border-radius:20px;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);transform-style:preserve-3d;perspective:1000px}
+    .card:hover{border-color:#d4a056;box-shadow:0 20px 60px rgba(0,0,0,0.08)}
+    .card.tilt-active{transform:perspective(1000px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-4px)}
+
+    /* Photo card */
+    .photo-card{border-radius:20px;overflow:hidden;position:relative;cursor:pointer}
+    .photo-card img{transition:transform 0.6s cubic-bezier(0.16,1,0.3,1),filter 0.4s}
+    .photo-card:hover img{transform:scale(1.06);filter:brightness(0.92)}
+    .photo-card::after{content:'';position:absolute;inset:0;background:linear-gradient(transparent 60%,rgba(0,0,0,0.15));opacity:0;transition:opacity 0.4s}
+    .photo-card:hover::after{opacity:1}
+    .photo-card .photo-zoom-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:white/80;backdrop-filter:blur(8px);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;transition:transform 0.3s;z-index:2}
+    .photo-card:hover .photo-zoom-hint{transform:translate(-50%,-50%) scale(1)}
+
+    /* Lightbox */
+    #lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.4s;backdrop-filter:blur(20px)}
+    #lightbox.active{opacity:1;pointer-events:all}
+    #lightbox img{max-width:90vw;max-height:85vh;border-radius:16px;object-fit:contain;transform:scale(0.9);transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);box-shadow:0 40px 80px rgba(0,0,0,0.4)}
+    #lightbox.active img{transform:scale(1)}
+    #lightbox .close-btn{position:absolute;top:20px;right:24px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s}
+    #lightbox .close-btn:hover{background:rgba(255,255,255,0.2);transform:rotate(90deg)}
+
+    /* Progress bar - animate on scroll */
+    .bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#e07a3a,#d4a056,#c4883c);background-size:200% 100%;width:0%;transition:width 1.5s cubic-bezier(0.16,1,0.3,1);animation:barShimmer 3s ease-in-out infinite}
+    .bar-fill.animated{width:var(--target-width)}
+    @keyframes barShimmer{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+    /* Quiz - slide animation */
+    .quiz-slide-in{animation:slideIn 0.5s cubic-bezier(0.16,1,0.3,1)}
+    .quiz-slide-out{animation:slideOut 0.3s ease-in forwards}
+    @keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes slideOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-30px)}}
+
+    .quiz-opt{cursor:pointer;transition:all 0.3s;border:1px solid #e7e5e4;border-radius:14px;padding:14px 20px;position:relative;overflow:hidden}
+    .quiz-opt::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#e07a3a10,#d4a05610);opacity:0;transition:opacity 0.3s}
+    .quiz-opt:hover{border-color:#e07a3a;transform:translateX(4px)}
+    .quiz-opt:hover::before{opacity:1}
+    .quiz-opt.selected{border-color:#e07a3a;background:#e07a3a10;transform:scale(0.98)}
+    .quiz-opt.selected::after{content:'✓';position:absolute;right:16px;top:50%;transform:translateY(-50%);color:#e07a3a;font-weight:bold}
+
+    /* Compat ring */
+    .compat-ring{width:150px;height:150px;position:relative}
+    .compat-ring svg{transform:rotate(-90deg)}
+    .compat-ring circle{transition:stroke-dashoffset 1.5s cubic-bezier(0.16,1,0.3,1)}
+
+    /* Confetti burst for quiz result */
+    .confetti{position:absolute;width:8px;height:8px;border-radius:2px;animation:confettiFall 2.5s ease-out forwards}
+    @keyframes confettiFall{
+      0%{transform:translateY(0) rotate(0) scale(1);opacity:1}
+      100%{transform:translateY(300px) rotate(720deg) scale(0);opacity:0}
+    }
+
+    /* Divider */
+    .divider{height:1px;background:linear-gradient(90deg,transparent,#d6d3d1,transparent)}
+
+    /* Nav link with active state */
+    .nav-a{position:relative;color:#78716c;transition:color 0.3s}
+    .nav-a:hover,.nav-a.active{color:#292524}
+    .nav-a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1.5px;background:#e07a3a;transition:width 0.3s}
+    .nav-a:hover::after,.nav-a.active::after{width:100%}
+
+    /* Magnetic button */
+    .btn-magnetic{transition:transform 0.2s ease-out}
+    .btn-primary{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:50px;font-weight:500;font-size:14px;color:white;background:linear-gradient(135deg,#e07a3a,#d4a056);background-size:200% 200%;transition:all 0.3s;position:relative;overflow:hidden}
+    .btn-primary::before{content:'';position:absolute;inset:-2px;border-radius:inherit;background:linear-gradient(135deg,#e07a3a,#d4a056,#c4883c);z-index:-1;filter:blur(10px);opacity:0;transition:opacity 0.3s}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(224,122,58,0.35)}
+    .btn-primary:hover::before{opacity:1}
+    .btn-primary:active{transform:translateY(0) scale(0.98)}
+    .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:50px;font-weight:500;font-size:14px;color:#57534e;border:1px solid #d6d3d1;transition:all 0.3s}
+    .btn-outline:hover{border-color:#e07a3a;color:#e07a3a;box-shadow:0 4px 20px rgba(224,122,58,0.1)}
+
+    /* Typing cursor */
+    .typing-cursor{display:inline-block;width:2px;height:1em;background:#e07a3a;margin-left:2px;animation:cursorBlink 1s step-end infinite;vertical-align:text-bottom}
+    @keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* Tag */
+    .tag{display:inline-block;padding:4px 14px;border-radius:50px;font-size:12px;border:1px solid #e7e5e4;color:#78716c;background:white;transition:all 0.3s}
+    .tag:hover{border-color:#e07a3a30;background:#fdf8f0}
+
+    /* Hobby card hover emoji float */
+    .hobby-card{position:relative;overflow:hidden}
+    .hobby-card .hobby-emoji{transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
+    .hobby-card:hover .hobby-emoji{transform:scale(1.2) rotate(-10deg) translateY(-4px)}
+    .hobby-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,#e07a3a08,transparent 70%);opacity:0;transition:opacity 0.4s}
+    .hobby-card:hover::before{opacity:1}
+
+    /* Smooth counter animation for numbers */
+    @keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  </style>
+</head>
+<body>
+
+  <!-- Scroll Progress Bar -->
+  <div id="scrollProgress"></div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="">
+    <button class="close-btn" onclick="closeLightbox()">&times;</button>
+  </div>
+
+  <!-- Floating Particles -->
+  <div id="particles" class="fixed inset-0 pointer-events-none" style="z-index:-1"></div>
+
+  <!-- Blobs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:-1">
+    <div class="blob" style="width:600px;height:600px;background:#e07a3a;opacity:0.04;top:-200px;right:-100px"></div>
+    <div class="blob" style="width:500px;height:500px;background:#d4a056;opacity:0.05;bottom:-150px;left:-100px;animation-delay:-8s"></div>
+    <div class="blob" style="width:400px;height:400px;background:#a8a29e;opacity:0.03;top:50%;left:50%;animation-delay:-15s"></div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="fixed top-0 w-full z-50 bg-cream/80 backdrop-blur-xl border-b border-stone-200/50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#" class="font-serif text-lg font-semibold tracking-tight text-stone-800">Asher.</a>
+      <div class="hidden sm:flex items-center gap-8 text-sm">
+        <a href="#profile" class="nav-a">About</a>
+        <a href="#hobbies" class="nav-a">Hobbies</a>
+        <a href="#quiz" class="nav-a">Quiz</a>
+        <a href="#contact" class="nav-a">Contact</a>
+      </div>
+      <button id="langToggle" onclick="toggleLang()" class="text-xs text-stone-400 hover:text-stone-700 transition-colors border border-stone-200 rounded-full px-3 py-1 cursor-pointer">中 / EN</button>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="min-h-screen flex items-center px-6 pt-20">
+    <div class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <!-- Left text -->
+      <div>
+        <div class="reveal" data-delay="1">
+          <span class="tag" style="color:#e07a3a;border-color:#e07a3a30;background:#e07a3a08">
+            <span data-zh="正在寻找副驾驶" data-en="Searching for Co-pilot">正在寻找副驾驶</span> ✨
+          </span>
+        </div>
+        <h1 class="reveal font-serif text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] text-stone-900 mb-6" data-delay="2">
+          <span data-zh="寻找我的" data-en="Find My">寻找我的</span><br>
+          <span id="heroTyping" style="color:#e07a3a"></span><span class="typing-cursor"></span>
+        </h1>
+        <p class="reveal text-lg text-stone-500 mb-4 leading-relaxed" data-delay="3">
+          <span data-zh="96年 · 狮子座♌ · ESTJ-A · 上海 · Web3 Builder" data-en="Born '96 · Leo ♌ · ESTJ-A · Shanghai · Web3 Builder">96年 · 狮子座♌ · ESTJ-A · 上海 · Web3 Builder</span>
+        </p>
+        <p class="reveal text-stone-400 text-sm mb-10 leading-relaxed max-w-md" data-delay="4">
+          <span data-zh="司机小周为您服务 — 小米YU7已就位，副驾空着，专等那个对的人。" data-en="Driver Zhou at your service — Xiaomi YU7 ready, co-pilot seat reserved for the one.">司机小周为您服务 — 小米YU7已就位，副驾空着，专等那个对的人。</span>
+        </p>
+        <div class="reveal flex flex-wrap gap-4" data-delay="5">
+          <a href="#profile" class="btn-primary btn-magnetic"><span data-zh="了解这个人" data-en="Meet Asher">了解这个人</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>
+          <a href="#quiz" class="btn-outline btn-magnetic"><span data-zh="灵魂测试" data-en="Soul Match">灵魂测试</span> →</a>
+        </div>
+      </div>
+      <!-- Right photo -->
+      <div class="reveal">
+        <div class="photo-card rounded-3xl shadow-2xl shadow-stone-200/50">
+          <img src="images/ski.jpg" alt="Asher skiing" class="w-full aspect-[4/5] object-cover object-top">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PROFILE ═══ -->
+  <section id="profile" class="py-28 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="reveal text-center mb-16">
+        <span class="text-xs tracking-[0.3em] uppercase text-accent font-medium" data-zh="角色面板" data-en="Character Sheet">角色面板</span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold mt-3 text-stone-900">
+          <span data-zh="关于" data-en="About">关于</span> <span style="color:#e07a3a">Asher</span>
+        </h2>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Photo + basics -->
+        <div class="reveal space-y-6">
+          <div class="photo-card shadow-lg shadow-stone-200/40">
+            <img src="images/coffee.jpg" alt="Asher" class="w-full aspect-[3/4] object-cover">
+          </div>
+          <div class="card p-6">
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between"><span class="text-stone-400" data-zh="坐标" data-en="Base">坐标</span><span class="font-medium" data-zh="上海·浦东" data-en="Shanghai">上海·浦东</span></div>
+              <div class="divider"></div>
+              <div class="flex justify-between"><span class="text-stone-400" data-zh="身高 / 体重" data-en="Height / Weight">身高 / 体重</span><span class="font-medium">170cm / 63kg</span></div>
+              <div class="divider"></div>
+              <div class="flex justify-between"><span class="text-stone-400" data-zh="年份" data-en="Year">年份</span><span class="font-medium">1996 ♌</span></div>
+              <div class="divider"></div>
+              <div class="flex justify-between"><span class="text-stone-400" data-zh="学历" data-en="Education">学历</span><span class="font-medium" data-zh="中国传媒大学" data-en="CUC Beijing">中国传媒大学</span></div>
+              <div class="divider"></div>
+              <div class="flex justify-between"><span class="text-stone-400" data-zh="家乡" data-en="Hometown">家乡</span><span class="font-medium" data-zh="山西·孝义" data-en="Shanxi">山西·孝义</span></div>
+              <div class="divider"></div>
+              <div class="flex justify-between"><span class="text-stone-400" data-zh="工作模式" data-en="Mode">工作模式</span><span class="font-medium" style="color:#e07a3a" data-zh="远程·自由" data-en="Remote · Flex">远程·自由</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Career + stats -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Career -->
+          <div class="reveal card p-8">
+            <h3 class="text-xs tracking-[0.2em] uppercase text-accent font-medium mb-5" data-zh="职业经历" data-en="Career Path">职业经历</h3>
+            <div class="flex items-center gap-3 mb-4">
+              <span class="text-sm text-stone-400" data-zh="现任" data-en="Now">现任</span>
+              <span class="font-semibold" data-zh="蚂蚁 · Web3 SRE 负责人" data-en="Ant · Web3 SRE Lead">蚂蚁 · Web3 SRE 负责人</span>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-5">
+              <span class="tag">B<span data-zh="站" data-en="ilibili">站</span></span>
+              <span class="tag" data-zh="快手" data-en="Kuaishou">快手</span>
+              <span class="tag" style="color:#e07a3a;border-color:#e07a3a30" data-zh="蚂蚁" data-en="Ant">蚂蚁</span>
+            </div>
+            <p class="text-sm text-stone-500 leading-relaxed">
+              <span data-zh="不算安分，始终在折腾。从游戏大厂到Web3，相信能力和收入能一起成长。最近疯狂迷恋Vibe Coding，喜欢用程序解决一切问题——比如这个网站。" data-en="Never one to sit still. From top gaming companies to Web3, always pushing boundaries. Currently obsessed with Vibe Coding — building solutions for everything, including this very website.">不算安分，始终在折腾。从游戏大厂到Web3，相信能力和收入能一起成长。最近疯狂迷恋Vibe Coding，喜欢用程序解决一切问题——比如这个网站。</span>
+            </p>
+          </div>
+
+          <!-- Ability bars -->
+          <div class="reveal card p-8">
+            <h3 class="text-xs tracking-[0.2em] uppercase text-accent font-medium mb-6" data-zh="能力值" data-en="Stats">能力值</h3>
+            <div class="space-y-5" id="abilityBars">
+              <div><div class="flex justify-between text-sm mb-2"><span class="text-stone-600" data-zh="技术力" data-en="Tech Power">技术力</span><span class="text-stone-400 bar-num" data-target="92">0</span></div><div class="h-2 bg-stone-100 rounded-full overflow-hidden"><div class="bar-fill" data-width="92%" style="--target-width:92%"></div></div></div>
+              <div><div class="flex justify-between text-sm mb-2"><span class="text-stone-600" data-zh="行动力" data-en="Action">行动力</span><span class="text-stone-400 bar-num" data-target="95">0</span></div><div class="h-2 bg-stone-100 rounded-full overflow-hidden"><div class="bar-fill" data-width="95%" style="--target-width:95%"></div></div></div>
+              <div><div class="flex justify-between text-sm mb-2"><span class="text-stone-600" data-zh="浪漫值" data-en="Romance">浪漫值</span><span class="text-stone-400 bar-num" data-target="85">0</span></div><div class="h-2 bg-stone-100 rounded-full overflow-hidden"><div class="bar-fill" data-width="85%" style="--target-width:85%"></div></div></div>
+              <div><div class="flex justify-between text-sm mb-2"><span class="text-stone-600" data-zh="生活力" data-en="Lifestyle">生活力</span><span class="text-stone-400 bar-num" data-target="88">0</span></div><div class="h-2 bg-stone-100 rounded-full overflow-hidden"><div class="bar-fill" data-width="88%" style="--target-width:88%"></div></div></div>
+              <div><div class="flex justify-between text-sm mb-2"><span class="text-stone-600" data-zh="幽默感" data-en="Humor">幽默感</span><span class="text-stone-400 bar-num" data-target="78">0</span></div><div class="h-2 bg-stone-100 rounded-full overflow-hidden"><div class="bar-fill" data-width="78%" style="--target-width:78%"></div></div></div>
+            </div>
+          </div>
+
+          <!-- MBTI -->
+          <div class="reveal card p-8">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-xs tracking-[0.2em] uppercase text-accent font-medium">MBTI</h3>
+              <div class="flex items-center gap-2">
+                <span class="font-serif text-2xl font-bold text-stone-900">ESTJ-A</span>
+                <span class="tag text-xs" data-zh="总经理" data-en="Executive">总经理</span>
+              </div>
+            </div>
+            <p class="text-xs text-stone-400 mb-6" data-zh="出色的管理者，在管理事物或人的方面无与伦比。" data-en="Excellent managers, unmatched in managing things or people.">出色的管理者，在管理事物或人的方面无与伦比。</p>
+            <div class="space-y-5">
+              <!-- E 56% -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-stone-600" data-zh="精力支配" data-en="Energy">精力支配</span>
+                  <span class="text-accent font-medium">56% <span data-zh="外向" data-en="Extraverted">外向</span></span>
+                </div>
+                <div class="relative h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="absolute inset-y-0 left-0 rounded-full" style="width:56%;background:#4298b4"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-stone-300 mt-1"><span data-zh="外向(E)" data-en="Extraverted(E)">外向(E)</span><span data-zh="内向(I)" data-en="Introverted(I)">内向(I)</span></div>
+              </div>
+              <!-- S 66% -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-stone-600" data-zh="感知偏好" data-en="Perception">感知偏好</span>
+                  <span class="text-accent font-medium">66% <span data-zh="现实" data-en="Observant">现实</span></span>
+                </div>
+                <div class="relative h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="absolute inset-y-0 left-0 rounded-full" style="width:66%;background:#e4ae3a"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-stone-300 mt-1"><span data-zh="现实(S)" data-en="Observant(S)">现实(S)</span><span data-zh="直觉(N)" data-en="Intuitive(N)">直觉(N)</span></div>
+              </div>
+              <!-- T 60% -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-stone-600" data-zh="判断事物" data-en="Decision">判断事物</span>
+                  <span class="text-accent font-medium">60% <span data-zh="理性" data-en="Thinking">理性</span></span>
+                </div>
+                <div class="relative h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="absolute inset-y-0 left-0 rounded-full" style="width:60%;background:#33a474"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-stone-300 mt-1"><span data-zh="理性(T)" data-en="Thinking(T)">理性(T)</span><span data-zh="感性(F)" data-en="Feeling(F)">感性(F)</span></div>
+              </div>
+              <!-- J 52% -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-stone-600" data-zh="应对方式" data-en="Approach">应对方式</span>
+                  <span class="text-accent font-medium">52% <span data-zh="评判" data-en="Judging">评判</span></span>
+                </div>
+                <div class="relative h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="absolute inset-y-0 left-0 rounded-full" style="width:52%;background:#88619a"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-stone-300 mt-1"><span data-zh="评判(J)" data-en="Judging(J)">评判(J)</span><span data-zh="展望(P)" data-en="Prospecting(P)">展望(P)</span></div>
+              </div>
+              <!-- A 87% -->
+              <div>
+                <div class="flex justify-between text-xs mb-1.5">
+                  <span class="text-stone-600" data-zh="身份特质" data-en="Identity">身份特质</span>
+                  <span class="text-accent font-medium">87% <span data-zh="自信" data-en="Assertive">自信</span></span>
+                </div>
+                <div class="relative h-2 bg-stone-100 rounded-full overflow-hidden">
+                  <div class="absolute inset-y-0 left-0 rounded-full" style="width:87%;background:#f25e62"></div>
+                </div>
+                <div class="flex justify-between text-[10px] text-stone-300 mt-1"><span data-zh="自信(-A)" data-en="Assertive(-A)">自信(-A)</span><span data-zh="动荡(-T)" data-en="Turbulent(-T)">动荡(-T)</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quote -->
+          <div class="reveal card p-8 bg-warm-50 border-warm-100">
+            <p class="text-sm text-stone-600 leading-relaxed italic">
+              "<span data-zh="在浦东远程办公，时间相对自由。所以能保证的是：如果你需要，我总能陪在身边。" data-en="Working remotely in Pudong with flexible hours. What I can promise: whenever you need me, I'll be there.">在浦东远程办公，时间相对自由。所以能保证的是：如果你需要，我总能陪在身边。</span>"
+            </p>
+          </div>
+
+          <!-- Travel photo -->
+          <div class="reveal photo-card shadow-lg shadow-stone-200/40">
+            <img src="images/snow-mountain.jpg" alt="Travel" class="w-full aspect-[16/7] object-cover">
+            <div class="absolute bottom-4 left-4 bg-white/90 backdrop-blur-md rounded-full px-4 py-2 text-xs text-stone-600">
+              <span data-zh="📍 川西 · 说走就走" data-en="📍 Western Sichuan · Just go">📍 川西 · 说走就走</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ HOBBIES ═══ -->
+  <section id="hobbies" class="py-28 px-6 bg-white">
+    <div class="max-w-6xl mx-auto">
+      <div class="reveal text-center mb-16">
+        <span class="text-xs tracking-[0.3em] uppercase text-accent font-medium" data-zh="兴趣爱好" data-en="Interests">兴趣爱好</span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold mt-3 text-stone-900" data-zh="日常碎片" data-en="Life Fragments">日常碎片</h2>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="1"><div class="text-3xl mb-3 hobby-emoji">🚗</div><h4 class="font-semibold text-sm mb-1" data-zh="自驾游" data-en="Road Trips">自驾游</h4><p class="text-xs text-stone-400" data-zh="说走就走的浪漫" data-en="Spontaneous adventures">说走就走的浪漫</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="2"><div class="text-3xl mb-3 hobby-emoji">✈️</div><h4 class="font-semibold text-sm mb-1" data-zh="旅行" data-en="Travel">旅行</h4><p class="text-xs text-stone-400" data-zh="丽江·张家界·川西" data-en="Lijiang·Zhangjiajie·Sichuan">丽江·张家界·川西</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="3"><div class="text-3xl mb-3 hobby-emoji">🍜</div><h4 class="font-semibold text-sm mb-1" data-zh="探店" data-en="Foodie">探店</h4><p class="text-xs text-stone-400" data-zh="上海美食地图" data-en="Shanghai food map">上海美食地图</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="4"><div class="text-3xl mb-3 hobby-emoji">⛺</div><h4 class="font-semibold text-sm mb-1" data-zh="露营" data-en="Camping">露营</h4><p class="text-xs text-stone-400" data-zh="星空下的自由" data-en="Under the stars">星空下的自由</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="5"><div class="text-3xl mb-3 hobby-emoji">🎿</div><h4 class="font-semibold text-sm mb-1" data-zh="滑雪" data-en="Skiing">滑雪</h4><p class="text-xs text-stone-400" data-zh="冬天的仪式感" data-en="Winter ritual">冬天的仪式感</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="6"><div class="text-3xl mb-3 hobby-emoji">🏊</div><h4 class="font-semibold text-sm mb-1" data-zh="游泳" data-en="Swimming">游泳</h4><p class="text-xs text-stone-400" data-zh="保持身材的秘密" data-en="Staying fit">保持身材的秘密</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="7"><div class="text-3xl mb-3 hobby-emoji">🎮</div><h4 class="font-semibold text-sm mb-1" data-zh="游戏" data-en="Gaming">游戏</h4><p class="text-xs text-stone-400" data-zh="闲暇时来一局" data-en="Casual breaks">闲暇时来一局</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="7"><div class="text-3xl mb-3 hobby-emoji">💻</div><h4 class="font-semibold text-sm mb-1">Vibe Coding</h4><p class="text-xs text-stone-400" data-zh="用代码解决一切" data-en="Code solves all">用代码解决一切</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PHOTO WALL ═══ -->
+  <section class="py-28 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="reveal text-center mb-16">
+        <span class="text-xs tracking-[0.3em] uppercase text-accent font-medium" data-zh="生活碎片" data-en="Life Moments">生活碎片</span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold mt-3 text-stone-900" data-zh="我的世界" data-en="My World">我的世界</h2>
+      </div>
+      <!-- Bento photo grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px] sm:auto-rows-[240px]">
+        <!-- Row 1: ski (tall), sea (wide), coffee -->
+        <div class="reveal photo-card row-span-2 shadow-lg shadow-stone-200/30">
+          <img src="images/ski.jpg" alt="" class="w-full h-full object-cover object-top">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="🎿 滑雪日常" data-en="🎿 Skiing vibes">🎿 滑雪日常</div>
+        </div>
+        <div class="reveal photo-card col-span-2 shadow-lg shadow-stone-200/30">
+          <img src="images/snow-mountain.jpg" alt="" class="w-full h-full object-cover">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="🏔️ 川西·达古冰川" data-en="🏔️ Western Sichuan">🏔️ 川西·达古冰川</div>
+        </div>
+        <div class="reveal photo-card row-span-2 shadow-lg shadow-stone-200/30">
+          <img src="images/suit.jpg" alt="" class="w-full h-full object-cover object-top">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="👔 正装也可以" data-en="👔 Suited up">👔 正装也可以</div>
+        </div>
+        <!-- Row 2: xiaomi, tibet -->
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30">
+          <img src="images/xiaomi.jpg" alt="" class="w-full h-full object-cover object-top">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="🚗 提车日" data-en="🚗 New car day">🚗 提车日</div>
+        </div>
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30">
+          <img src="images/tibet.jpg" alt="" class="w-full h-full object-cover object-top">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="�ثل 经幡飘扬" data-en="🏳️ Prayer flags">🏳️ 经幡飘扬</div>
+        </div>
+        <!-- Row 3: sea (wide), ski2, coffee -->
+        <div class="reveal photo-card col-span-2 shadow-lg shadow-stone-200/30">
+          <img src="images/sea.jpg" alt="" class="w-full h-full object-cover">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="🌊 面朝大海" data-en="🌊 Facing the sea">🌊 面朝大海</div>
+        </div>
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30">
+          <img src="images/ski2.jpg" alt="" class="w-full h-full object-cover">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="⛷️ 双板也会" data-en="⛷️ Alpine too">⛷️ 双板也会</div>
+        </div>
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30">
+          <img src="images/coffee.jpg" alt="" class="w-full h-full object-cover object-top">
+          <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="☕ 日常" data-en="☕ Daily life">☕ 日常</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ WANTED ═══ -->
+  <section class="py-28 px-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="reveal card p-10 sm:p-14 relative overflow-hidden">
+        <div class="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-accent/5 blur-[60px]"></div>
+        <div class="text-center mb-10">
+          <span class="text-xs tracking-[0.3em] uppercase text-accent font-medium" data-zh="招募公告" data-en="Now Hiring">招募公告</span>
+          <h2 class="font-serif text-3xl sm:text-4xl font-bold mt-3 text-stone-900">
+            <span data-zh="招募：副驾驶" data-en="Wanted: Co-pilot">招募：副驾驶</span> 🧡
+          </h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div>
+            <h4 class="text-xs tracking-[0.2em] uppercase text-stone-400 font-medium mb-4" data-zh="期望" data-en="Looking for">期望</h4>
+            <ul class="space-y-3 text-sm text-stone-600">
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="灵魂契合，三观一致" data-en="Soulmate vibes, shared values">灵魂契合，三观一致</span></li>
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="懂得享受生活的美好" data-en="Knows how to enjoy life">懂得享受生活的美好</span></li>
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="一起打拼，共同成长" data-en="Growing together">一起打拼，共同成长</span></li>
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="喜欢旅行或愿意尝试" data-en="Loves or open to travel">喜欢旅行或愿意尝试</span></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="text-xs tracking-[0.2em] uppercase text-stone-400 font-medium mb-4" data-zh="你将获得" data-en="You'll get">你将获得</h4>
+            <ul class="space-y-3 text-sm text-stone-600">
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="随叫随到的专属司机" data-en="Personal driver, anytime">随叫随到的专属司机</span></li>
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="说走就走的旅行搭子" data-en="Spontaneous travel buddy">说走就走的旅行搭子</span></li>
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="全天候技术支持（修电脑免费）" data-en="24/7 tech support (free!)">全天候技术支持（修电脑免费）</span></li>
+              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="一起体验细碎和浪漫的美好" data-en="Sharing life's small beautiful moments">一起体验细碎和浪漫的美好</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ QUIZ ═══ -->
+  <section id="quiz" class="py-28 px-6 bg-white">
+    <div class="max-w-2xl mx-auto">
+      <div class="reveal text-center mb-12">
+        <span class="text-xs tracking-[0.3em] uppercase text-accent font-medium" data-zh="灵魂测试" data-en="Soul Match">灵魂测试</span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold mt-3 text-stone-900" data-zh="我们有多契合？" data-en="How Compatible Are We?">我们有多契合？</h2>
+        <p class="text-stone-400 text-sm mt-3" data-zh="回答 8 个趣味问题，解锁你的专属匹配报告" data-en="Answer 8 fun questions to unlock your match report">回答 8 个趣味问题，解锁你的专属匹配报告</p>
+      </div>
+      <div id="quizBox" class="reveal"></div>
+      <div id="quizResult" class="hidden">
+        <div class="card p-8 sm:p-12">
+          <!-- Top: ring + title -->
+          <div class="text-center mb-8">
+            <div class="compat-ring mx-auto mb-4">
+              <svg width="150" height="150" viewBox="0 0 150 150">
+                <circle cx="75" cy="75" r="65" stroke="#f5f5f4" stroke-width="8" fill="none"/>
+                <circle id="compatCircle" cx="75" cy="75" r="65" stroke="#e07a3a" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="408" stroke-dashoffset="408"/>
+              </svg>
+              <div class="absolute inset-0 flex items-center justify-center"><span id="compatPct" class="text-3xl font-serif font-bold text-accent">0%</span></div>
+            </div>
+            <h3 id="compatTitle" class="font-serif text-2xl font-bold mb-2 text-stone-900"></h3>
+            <p id="compatDesc" class="text-sm text-stone-500 max-w-md mx-auto"></p>
+          </div>
+          <!-- Dimension breakdown -->
+          <div class="border-t border-stone-100 pt-6 mb-8">
+            <h4 class="text-xs tracking-[0.2em] uppercase text-accent font-medium mb-5 text-center" data-zh="维度分析" data-en="Dimension Breakdown">维度分析</h4>
+            <div class="grid grid-cols-2 gap-4" id="dimGrid"></div>
+          </div>
+          <!-- Fortune cookie -->
+          <div class="bg-warm-50 rounded-2xl p-6 mb-8 text-center">
+            <p class="text-xs text-stone-400 mb-2" data-zh="💌 Asher 想对你说" data-en="💌 A note from Asher">💌 Asher 想对你说</p>
+            <p id="fortuneMsg" class="text-sm text-stone-700 italic leading-relaxed"></p>
+          </div>
+          <!-- Actions -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a href="#contact" class="btn-primary btn-magnetic"><span data-zh="建立连接" data-en="Connect">建立连接</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></a>
+            <button onclick="resetQuiz()" class="btn-outline btn-magnetic cursor-pointer"><span data-zh="重新测试" data-en="Try Again">重新测试</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CONTACT ═══ -->
+  <section id="contact" class="py-28 px-6">
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="reveal">
+        <span class="text-xs tracking-[0.3em] uppercase text-accent font-medium" data-zh="建立连接" data-en="Connect">建立连接</span>
+        <h2 class="font-serif text-4xl sm:text-5xl font-bold mt-3 mb-4 text-stone-900">
+          <span data-zh="扫码解锁完整版" data-en="Scan to Unlock">扫码解锁完整版</span>
+          <span style="color:#e07a3a"> Asher</span>
+        </h2>
+        <p class="text-stone-400 text-sm mb-10" data-zh="微信扫一扫，开始我们的故事" data-en="Scan with WeChat to start our story">微信扫一扫，开始我们的故事</p>
+      </div>
+      <div class="reveal card inline-block p-8 mx-auto" style="box-shadow:0 8px 40px rgba(224,122,58,0.08)">
+        <div class="w-48 h-48 rounded-2xl overflow-hidden mb-3">
+          <img src="images/wechat-qr.jpg" alt="WeChat QR" class="w-full h-full object-cover">
+        </div>
+        <p class="text-xs text-stone-400" data-zh="微信扫一扫添加好友" data-en="Scan to add on WeChat">微信扫一扫添加好友</p>
+      </div>
+      <p class="reveal text-stone-400 text-sm mt-12 max-w-md mx-auto leading-relaxed">
+        <span data-zh="期待遇见同样在上海努力，也懂得享受生活的你 ✨" data-en="Looking forward to meeting someone who hustles and enjoys life in Shanghai ✨">期待遇见同样在上海努力，也懂得享受生活的你 ✨</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 px-6 border-t border-stone-100 text-center">
+    <p class="text-stone-300 text-xs"><span data-zh="Claude Code 制作" data-en="Made with Claude Code">Claude Code 制作</span> · 2026 Asher</p>
+  </footer>
+
+  <script>
+    /* ═══ Language Toggle ═══ */
+    let lang='zh';
+    function toggleLang(){
+      lang=lang==='zh'?'en':'zh';
+      document.querySelectorAll('[data-zh]').forEach(function(el){el.textContent=el.getAttribute('data-'+lang)});
+      document.getElementById('langToggle').textContent=lang==='zh'?'中 / EN':'EN / 中';
+      startTyping();
+      renderQ();
+    }
+
+    /* ═══ Scroll Progress Bar ═══ */
+    window.addEventListener('scroll',function(){
+      var h=document.documentElement.scrollHeight-window.innerHeight;
+      var pct=h>0?(window.scrollY/h)*100:0;
+      document.getElementById('scrollProgress').style.width=pct+'%';
+    });
+
+    /* ═══ Nav Active Highlight ═══ */
+    var sections=document.querySelectorAll('section[id]');
+    var navLinks=document.querySelectorAll('.nav-a');
+    window.addEventListener('scroll',function(){
+      var cur='';
+      sections.forEach(function(s){if(window.scrollY>=s.offsetTop-200)cur=s.id});
+      navLinks.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+cur)});
+    });
+
+    /* ═══ Reveal Observer ═══ */
+    var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting)e.target.classList.add('visible')})},{threshold:0.1,rootMargin:'0px 0px -30px 0px'});
+    document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el)});
+
+    /* ═══ Ability Bars Animate on Scroll ═══ */
+    var barsAnimated=false;
+    var barObs=new IntersectionObserver(function(entries){
+      if(barsAnimated)return;
+      entries.forEach(function(e){
+        if(!e.isIntersecting)return;
+        barsAnimated=true;
+        document.querySelectorAll('.bar-fill').forEach(function(bar){bar.classList.add('animated')});
+        document.querySelectorAll('.bar-num').forEach(function(num){
+          var target=parseInt(num.getAttribute('data-target'));
+          var cur=0;
+          var step=target/40;
+          var timer=setInterval(function(){cur+=step;if(cur>=target){cur=target;clearInterval(timer)}num.textContent=Math.round(cur)},30);
+        });
+      });
+    },{threshold:0.3});
+    var abilitySection=document.getElementById('abilityBars');
+    if(abilitySection)barObs.observe(abilitySection);
+
+    /* ═══ Hero Typing Effect ═══ */
+    var typingWords=lang==='zh'?['副驾驶','旅行搭子','灵魂伴侣','最佳拍档']:['Co-pilot','Travel Buddy','Soulmate','Best Partner'];
+    var typingEl=document.getElementById('heroTyping');
+    var typeWordIdx=0,typeCharIdx=0,typeDeleting=false,typeTimeout;
+    function startTyping(){
+      typingWords=lang==='zh'?['副驾驶','旅行搭子','灵魂伴侣','最佳拍档']:['Co-pilot','Travel Buddy','Soulmate','Best Partner'];
+      typeWordIdx=0;typeCharIdx=0;typeDeleting=false;
+      clearTimeout(typeTimeout);
+      typeStep();
+    }
+    function typeStep(){
+      var word=typingWords[typeWordIdx];
+      if(!typeDeleting){
+        typingEl.textContent=word.substring(0,typeCharIdx);
+        typeCharIdx++;
+        if(typeCharIdx>word.length){typeTimeout=setTimeout(function(){typeDeleting=true;typeStep()},2000);return}
+        typeTimeout=setTimeout(typeStep,100);
+      }else{
+        typeCharIdx--;
+        typingEl.textContent=word.substring(0,typeCharIdx);
+        if(typeCharIdx<=0){typeDeleting=false;typeWordIdx=(typeWordIdx+1)%typingWords.length;typeTimeout=setTimeout(typeStep,300);return}
+        typeTimeout=setTimeout(typeStep,50);
+      }
+    }
+    startTyping();
+
+    /* ═══ 3D Tilt on Cards ═══ */
+    document.querySelectorAll('.card').forEach(function(card){
+      card.addEventListener('mousemove',function(e){
+        var rect=card.getBoundingClientRect();
+        var x=(e.clientX-rect.left)/rect.width-0.5;
+        var y=(e.clientY-rect.top)/rect.height-0.5;
+        card.style.setProperty('--rx',(-y*6)+'deg');
+        card.style.setProperty('--ry',(x*6)+'deg');
+        card.classList.add('tilt-active');
+      });
+      card.addEventListener('mouseleave',function(){
+        card.style.setProperty('--rx','0deg');
+        card.style.setProperty('--ry','0deg');
+        card.classList.remove('tilt-active');
+      });
+    });
+
+    /* ═══ Magnetic Buttons ═══ */
+    document.querySelectorAll('.btn-magnetic').forEach(function(btn){
+      btn.addEventListener('mousemove',function(e){
+        var rect=btn.getBoundingClientRect();
+        var x=e.clientX-rect.left-rect.width/2;
+        var y=e.clientY-rect.top-rect.height/2;
+        btn.style.transform='translate('+x*0.15+'px,'+y*0.15+'px)';
+      });
+      btn.addEventListener('mouseleave',function(){btn.style.transform=''});
+    });
+
+    /* ═══ Photo Lightbox ═══ */
+    document.querySelectorAll('.photo-card img').forEach(function(img){
+      img.addEventListener('click',function(e){
+        e.stopPropagation();
+        document.getElementById('lightboxImg').src=img.src;
+        document.getElementById('lightbox').classList.add('active');
+        document.body.style.overflow='hidden';
+      });
+    });
+    function closeLightbox(){
+      document.getElementById('lightbox').classList.remove('active');
+      document.body.style.overflow='';
+    }
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLightbox()});
+
+    /* ═══ Falling Petals & Hearts ═══ */
+    function createPetals(){
+      var container=document.getElementById('particles');
+      // SVG shapes
+      var petalSVG='<svg class="petal-shape" width="SIZE" height="SIZE" viewBox="0 0 24 24"><ellipse cx="12" cy="10" rx="8" ry="12" fill="COLOR" opacity="0.7" transform="rotate(ROTATE 12 12)"/></svg>';
+      var heartSVG='<svg class="petal-shape" width="SIZE" height="SIZE" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="COLOR" opacity="0.6"/></svg>';
+      var sakuraSVG='<svg class="petal-shape" width="SIZE" height="SIZE" viewBox="0 0 30 30"><path d="M15 2 C15 2 20 8 20 14 C20 20 15 22 15 22 C15 22 10 20 10 14 C10 8 15 2 15 2Z" fill="COLOR" opacity="0.65" transform="rotate(ROTATE 15 15)"/></svg>';
+
+      var petalColors=['#fbb6ce','#f9a8d4','#f472b6','#fda4af','#fecdd3','#ffe4e6'];
+      var heartColors=['#f43f5e','#e11d48','#fb7185','#ff6b8a','#ec4899'];
+      var sakuraColors=['#fbcfe8','#f9a8d4','#fce7f3','#fda4af','#fecdd3'];
+
+      for(var i=0;i<28;i++){
+        var p=document.createElement('div');
+        p.className='petal';
+        var rand=Math.random();
+        var size,svg;
+        if(rand<0.4){
+          // Cherry blossom petal
+          size=Math.random()*14+10;
+          var color=sakuraColors[Math.floor(Math.random()*sakuraColors.length)];
+          svg=sakuraSVG.replace('SIZE',size).replace('SIZE',size).replace('COLOR',color).replace('ROTATE',Math.floor(Math.random()*360));
+        }else if(rand<0.7){
+          // Rose petal
+          size=Math.random()*12+8;
+          var color=petalColors[Math.floor(Math.random()*petalColors.length)];
+          svg=petalSVG.replace('SIZE',size).replace('SIZE',size).replace('COLOR',color).replace('ROTATE',Math.floor(Math.random()*360));
+        }else{
+          // Heart
+          size=Math.random()*10+8;
+          var color=heartColors[Math.floor(Math.random()*heartColors.length)];
+          svg=heartSVG.replace('SIZE',size).replace('SIZE',size).replace('COLOR',color);
+        }
+        p.innerHTML=svg;
+        p.style.left=Math.random()*100+'%';
+        p.style.animationDuration=(Math.random()*12+8)+'s';
+        p.style.animationDelay=(Math.random()*20)+'s';
+        container.appendChild(p);
+      }
+    }
+    createPetals();
+
+    /* ═══ Confetti Burst (Hearts + Petals) ═══ */
+    function burstConfetti(container){
+      var hearts=['❤️','💕','🌸','💗','✨','🩷','💖','🏵️'];
+      for(var i=0;i<30;i++){
+        var c=document.createElement('div');
+        c.className='confetti';
+        c.textContent=hearts[Math.floor(Math.random()*hearts.length)];
+        c.style.fontSize=(Math.random()*12+10)+'px';
+        c.style.left=50+((Math.random()-0.5)*70)+'%';
+        c.style.top='5%';
+        c.style.animationDelay=(Math.random()*0.6)+'s';
+        c.style.background='none';
+        c.style.width='auto';c.style.height='auto';
+        container.appendChild(c);
+        setTimeout(function(el){el.remove()}.bind(null,c),3500);
+      }
+    }
+
+    /* ═══ Quiz Logic ═══ */
+    const Qs=[
+      {zh:'周末最想做什么？',en:'Ideal weekend?',dim:'adventure',opts:[
+        {zh:'来一场说走就走的自驾游',en:'Spontaneous road trip',s:3},
+        {zh:'在家宅着打游戏追剧',en:'Stay home gaming/binging',s:1},
+        {zh:'探索一家宝藏餐厅',en:'Try a new restaurant',s:2},
+        {zh:'户外运动：滑雪/露营/游泳',en:'Outdoor: ski/camp/swim',s:3}]},
+      {zh:'旅行时你更像？',en:'Travel style?',dim:'adventure',opts:[
+        {zh:'攻略达人，行程安排满满',en:'Meticulous planner',s:1},
+        {zh:'随性派，走到哪算哪',en:'Go with the flow',s:3},
+        {zh:'有计划但留白',en:'Planned with breathing room',s:2},
+        {zh:'我不太喜欢旅行',en:"I don't travel much",s:0}]},
+      {zh:'理想的晚餐是？',en:'Ideal dinner?',dim:'lifestyle',opts:[
+        {zh:'一起在家做饭，边聊边吃',en:'Cook at home together',s:3},
+        {zh:'排队打卡网红餐厅',en:'Queue for trending spot',s:2},
+        {zh:'点外卖，躺沙发看电影',en:'Takeout + couch + movie',s:1},
+        {zh:'找个安静的日料/西餐',en:'Quiet Japanese/Western',s:2}]},
+      {zh:'你对"搞钱"的态度？',en:'Attitude toward money?',dim:'lifestyle',opts:[
+        {zh:'一起研究投资理财，双人模式',en:'Study investing together',s:3},
+        {zh:'各管各的，经济独立就好',en:'Independent finances',s:1},
+        {zh:'有钱很重要但别只聊钱',en:'Money matters but not all',s:2},
+        {zh:'佛系，够花就好',en:'Zen, enough is enough',s:1}]},
+      {zh:'对另一半事业的态度？',en:"Partner's career?",dim:'values',opts:[
+        {zh:'一起奋斗，互相支持',en:'Hustle together',s:3},
+        {zh:'各忙各的，互不干涉',en:'Independent lives',s:1},
+        {zh:'希望对方工作稳定就好',en:'Prefer stability',s:1},
+        {zh:'欣赏对方的热情和折腾劲',en:'Admire passion & ambition',s:3}]},
+      {zh:'吵架了怎么办？',en:'How to handle fights?',dim:'values',opts:[
+        {zh:'当面说清楚，不过夜',en:'Talk it out, never sleep angry',s:3},
+        {zh:'先冷静一下，各自想想',en:'Cool off, think separately',s:2},
+        {zh:'我会先道歉不管谁对谁错',en:"I'd apologize first",s:2},
+        {zh:'冷战到对方先低头',en:'Silent treatment',s:0}]},
+      {zh:'你觉得最浪漫的事？',en:'Most romantic thing?',dim:'romance',opts:[
+        {zh:'一起开车看日落',en:'Driving to watch the sunset',s:3},
+        {zh:'精心策划的惊喜',en:'A carefully planned surprise',s:2},
+        {zh:'平平淡淡的陪伴',en:'Simply being there every day',s:2},
+        {zh:'一起做一件疯狂的事',en:'Something crazy together',s:3}]},
+      {zh:'你的爱情语言是？',en:'Your love language?',dim:'romance',opts:[
+        {zh:'高质量的陪伴时间',en:'Quality time',s:3},
+        {zh:'肯定和赞美的话',en:'Words of affirmation',s:2},
+        {zh:'礼物和仪式感',en:'Gifts and rituals',s:1},
+        {zh:'肢体接触和拥抱',en:'Physical touch & hugs',s:2}]}
+    ];
+    let cQ=0,scores=[],dimScores={adventure:[],lifestyle:[],values:[],romance:[]};
+
+    function renderQ(){
+      if(cQ>=Qs.length)return;
+      var q=Qs[cQ],box=document.getElementById('quizBox');
+      box.textContent='';box.style.display='';
+      var card=document.createElement('div');card.className='card p-8 quiz-slide-in';
+      var top=document.createElement('div');top.className='flex items-center justify-between mb-6';
+      var num=document.createElement('span');num.className='text-xs text-stone-400';num.textContent=(cQ+1)+' / '+Qs.length;
+      // Animated progress dots
+      var bars=document.createElement('div');bars.className='flex gap-1';
+      Qs.forEach(function(_,i){var b=document.createElement('div');b.className='h-1.5 rounded-full transition-all duration-500 '+(i<cQ?'bg-accent w-6':i===cQ?'bg-accent/50 w-8':'bg-stone-100 w-6');bars.appendChild(b)});
+      top.appendChild(num);top.appendChild(bars);card.appendChild(top);
+      var dimNames={adventure:{zh:'冒险指数',en:'Adventure'},lifestyle:{zh:'生活契合',en:'Lifestyle'},values:{zh:'三观维度',en:'Values'},romance:{zh:'浪漫指数',en:'Romance'}};
+      var badge=document.createElement('span');badge.className='inline-block px-3 py-1 rounded-full text-[10px] font-medium mb-4';
+      badge.style.cssText='background:#e07a3a10;color:#e07a3a;border:1px solid #e07a3a20';
+      badge.textContent=lang==='zh'?dimNames[q.dim].zh:dimNames[q.dim].en;
+      card.appendChild(badge);
+      var title=document.createElement('h3');title.className='font-serif text-xl font-bold mb-6 text-stone-900';title.textContent=lang==='zh'?q.zh:q.en;card.appendChild(title);
+      var optC=document.createElement('div');optC.className='space-y-3';
+      q.opts.forEach(function(o,i){
+        var div=document.createElement('div');div.className='quiz-opt text-sm text-stone-600';
+        div.style.animationDelay=(i*0.08)+'s';
+        div.style.opacity='0';div.style.animation='slideIn 0.4s ease forwards';div.style.animationDelay=(i*0.08)+'s';
+        div.onclick=function(){pickOpt(i,o.s,q.dim)};
+        var sp=document.createElement('span');sp.className='text-accent/50 font-medium mr-3';sp.textContent=String.fromCharCode(65+i);
+        div.appendChild(sp);div.appendChild(document.createTextNode(lang==='zh'?o.zh:o.en));
+        optC.appendChild(div);
+      });
+      card.appendChild(optC);box.appendChild(card);
+    }
+
+    function pickOpt(idx,score,dim){
+      scores.push(score);dimScores[dim].push(score);
+      var opts=document.querySelectorAll('.quiz-opt');
+      opts[idx].classList.add('selected');
+      // Disable all options after selection
+      opts.forEach(function(o){o.style.pointerEvents='none'});
+      setTimeout(function(){
+        var box=document.getElementById('quizBox').firstChild;
+        if(box)box.classList.add('quiz-slide-out');
+        setTimeout(function(){cQ++;if(cQ<Qs.length){renderQ()}else{showRes()}},300);
+      },300);
+    }
+
+    function showRes(){
+      var total=scores.reduce(function(a,b){return a+b},0);
+      var pct=Math.round((total/(Qs.length*3))*100);
+      var val=Math.max(50,Math.min(98,pct+10));
+      document.getElementById('quizBox').style.display='none';
+      var resultEl=document.getElementById('quizResult');
+      resultEl.classList.remove('hidden');
+      // Confetti!
+      burstConfetti(resultEl.querySelector('.card'));
+      var circle=document.getElementById('compatCircle');
+      setTimeout(function(){circle.style.strokeDashoffset=408-(408*val/100)},100);
+      var cur=0;
+      var timer=setInterval(function(){cur+=2;if(cur>=val){cur=val;clearInterval(timer)}document.getElementById('compatPct').textContent=cur+'%'},20);
+      var t=document.getElementById('compatTitle'),d=document.getElementById('compatDesc');
+      if(val>=85){t.textContent=lang==='zh'?'命中注定的副驾驶！🔥':'Destined Co-pilot! 🔥';d.textContent=lang==='zh'?'这个匹配度太离谱了！宇宙都在撮合我们，你还在等什么？':'Off the charts! The universe is conspiring!';}
+      else if(val>=70){t.textContent=lang==='zh'?'灵魂共振 ✨':'Soul Resonance ✨';d.textContent=lang==='zh'?'我们有好多共同点！一杯咖啡的距离，也许就是一段故事的开始。':'So much in common! One coffee away from a great story.';}
+      else if(val>=55){t.textContent=lang==='zh'?'有缘人 💫':'Good Match 💫';d.textContent=lang==='zh'?'互补的地方让关系更有趣，聊聊看？也许会有惊喜。':'Our differences make things interesting!';}
+      else{t.textContent=lang==='zh'?'平行宇宙的交汇 🌈':'Parallel Universe 🌈';d.textContent=lang==='zh'?'虽然风格不同，但每一次相遇都值得珍惜，加个微信呗～':'Every encounter is worth cherishing. Add me?';}
+      // Dimensions
+      var grid=document.getElementById('dimGrid');grid.textContent='';
+      [{key:'adventure',zh:'冒险指数',en:'Adventure',emoji:'🏔️',color:'#e07a3a'},
+       {key:'lifestyle',zh:'生活契合',en:'Lifestyle',emoji:'🍜',color:'#d4a056'},
+       {key:'values',zh:'三观维度',en:'Values',emoji:'💎',color:'#7c3aed'},
+       {key:'romance',zh:'浪漫指数',en:'Romance',emoji:'💕',color:'#ec4899'}
+      ].forEach(function(dm,idx){
+        var arr=dimScores[dm.key];
+        var dimPct=arr.length?Math.max(40,Math.min(99,Math.round((arr.reduce(function(a,b){return a+b},0)/(arr.length*3))*100)+10)):50;
+        var div=document.createElement('div');div.className='bg-stone-50 rounded-xl p-4 text-center';
+        div.style.opacity='0';div.style.animation='slideIn 0.5s ease forwards';div.style.animationDelay=(idx*0.15)+'s';
+        var e=document.createElement('div');e.className='text-2xl mb-2';e.textContent=dm.emoji;
+        var l=document.createElement('div');l.className='text-xs text-stone-400 mb-1';l.textContent=lang==='zh'?dm.zh:dm.en;
+        var v=document.createElement('div');v.className='text-xl font-serif font-bold';v.style.color=dm.color;v.textContent=dimPct+'%';
+        var bo=document.createElement('div');bo.className='h-1.5 bg-stone-200 rounded-full mt-2 overflow-hidden';
+        var bi=document.createElement('div');bi.style.cssText='height:100%;border-radius:4px;width:0%;transition:width 1s ease;background:'+dm.color;
+        bo.appendChild(bi);div.appendChild(e);div.appendChild(l);div.appendChild(v);div.appendChild(bo);grid.appendChild(div);
+        setTimeout(function(){bi.style.width=dimPct+'%'},300+idx*150);
+      });
+      // Fortune
+      var msgs=lang==='zh'?
+        ['也许我们都在等一个信号，而你已经找到了这个网站，这本身就是缘分。','能看到这里的人，一定是个有趣的灵魂。很高兴认识你。','人生就像自驾游，风景很美，但有个副驾驶会更好。','我不知道你是谁，但你至少答对了一半的题，说明我们聊得来。','如果你也在上海，也许下一个路口就能遇见。']:
+        ['Finding this site might be fate.','Anyone who scrolled this far is an interesting soul.','Life is a road trip — better with a co-pilot.','You got half the questions right — we would get along.','If you are in Shanghai, we might cross paths soon.'];
+      document.getElementById('fortuneMsg').textContent=msgs[Math.floor(Math.random()*msgs.length)];
+    }
+
+    function resetQuiz(){
+      cQ=0;scores=[];dimScores={adventure:[],lifestyle:[],values:[],romance:[]};
+      document.getElementById('quizResult').classList.add('hidden');
+      document.getElementById('compatCircle').style.strokeDashoffset=408;
+      renderQ();
+    }
+
+    renderQ();
+
+    /* ═══ Smooth Scroll for Nav (override anchor default) ═══ */
+    document.querySelectorAll('a[href^="#"]').forEach(function(a){
+      a.addEventListener('click',function(e){
+        var target=document.querySelector(a.getAttribute('href'));
+        if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'})}
+      });
+    });
+  </script>
+</body>
+</html>
