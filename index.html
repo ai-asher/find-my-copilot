@@ -185,6 +185,46 @@
     /* ═══ Subtle floating animation for hero photo ═══ */
     @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
     .hero-photo-float{animation:heroFloat 6s ease-in-out infinite}
+
+    /* ═══ "摸摸可可" full-screen pet animations ═══ */
+    #petStage{position:fixed;inset:0;z-index:9997;pointer-events:none;overflow:hidden;display:none}
+    #petStage.active{display:block}
+    #petStage .dim{position:absolute;inset:0;background:rgba(28,25,23,0);transition:background 0.4s}
+    #petStage.active .dim{background:rgba(28,25,23,0.35)}
+
+    /* btn */
+    .pet-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:50px;font-weight:600;font-size:14px;color:white;background:linear-gradient(135deg,#e07a3a,#d4a056);background-size:200% 200%;cursor:pointer;border:none;transition:all 0.3s;box-shadow:0 6px 20px rgba(224,122,58,0.3);position:relative;overflow:hidden}
+    .pet-btn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 10px 30px rgba(224,122,58,0.4)}
+    .pet-btn:active{transform:scale(0.96)}
+    .pet-btn .paw{animation:pawWiggle 2.5s ease-in-out infinite;display:inline-block}
+    @keyframes pawWiggle{0%,90%,100%{transform:rotate(0)}93%{transform:rotate(-18deg)}96%{transform:rotate(18deg)}}
+
+    /* Effect 1: nuzzle — big cat face slides up, wiggles, slides away */
+    .pet-nuzzle{position:absolute;left:50%;bottom:-340px;width:300px;height:300px;border-radius:50%;object-fit:cover;transform:translateX(-50%);box-shadow:0 20px 60px rgba(0,0,0,0.4);border:6px solid white;animation:nuzzleSeq 3.6s cubic-bezier(0.16,1,0.3,1) forwards}
+    @keyframes nuzzleSeq{
+      0%{bottom:-340px;transform:translateX(-50%) rotate(0)}
+      22%{bottom:calc(50% - 150px);transform:translateX(-50%) rotate(0)}
+      32%{transform:translateX(-50%) rotate(-9deg)}
+      42%{transform:translateX(-50%) rotate(9deg)}
+      52%{transform:translateX(-50%) rotate(-7deg)}
+      62%{transform:translateX(-50%) rotate(6deg)}
+      72%{bottom:calc(50% - 150px);transform:translateX(-50%) rotate(0)}
+      100%{bottom:-340px;transform:translateX(-50%) rotate(0)}
+    }
+    .pet-speech{position:absolute;left:50%;top:calc(50% - 220px);transform:translateX(-50%);background:white;padding:10px 22px;border-radius:50px;font-size:15px;font-weight:600;color:#a06b2d;box-shadow:0 8px 24px rgba(0,0,0,0.15);white-space:nowrap;opacity:0;animation:speechPop 3.6s ease forwards}
+    @keyframes speechPop{0%,18%{opacity:0;transform:translateX(-50%) scale(0.8)}28%{opacity:1;transform:translateX(-50%) scale(1)}75%{opacity:1}85%,100%{opacity:0}}
+
+    /* Effect 3: peek — cat peeks from a screen edge */
+    .pet-peek{position:absolute;width:220px;height:260px;object-fit:cover;border-radius:20px;box-shadow:0 20px 50px rgba(0,0,0,0.4);border:5px solid white}
+    .pet-peek.from-right{right:-240px;top:50%;transform:translateY(-50%);animation:peekRight 3.4s cubic-bezier(0.16,1,0.3,1) forwards}
+    @keyframes peekRight{0%{right:-240px}25%{right:-40px}40%{right:-20px}55%{right:-40px}72%{right:-40px}100%{right:-240px}}
+    .pet-peek.from-left{left:-240px;top:50%;transform:translateY(-50%) scaleX(-1);animation:peekLeft 3.4s cubic-bezier(0.16,1,0.3,1) forwards}
+    @keyframes peekLeft{0%{left:-240px}25%{left:-40px}40%{left:-20px}55%{left:-40px}72%{left:-40px}100%{left:-240px}}
+
+    /* floating emoji rain (effects 2 & 4) */
+    .pet-emoji{position:absolute;pointer-events:none;will-change:transform,opacity}
+    @keyframes emojiRise{0%{transform:translateY(0) scale(0.6) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(-110vh) scale(1.1) rotate(var(--spin,180deg));opacity:0}}
+    @keyframes emojiDrop{0%{transform:translateY(-10vh) scale(0.5) rotate(0);opacity:0}10%{opacity:1}60%{opacity:1}100%{transform:translateY(110vh) scale(1) rotate(var(--spin,360deg));opacity:0}}
   </style>
 </head>
 <body>
@@ -200,6 +240,9 @@
 
   <!-- Floating Particles -->
   <div id="particles" class="fixed inset-0 pointer-events-none" style="z-index:-1"></div>
+
+  <!-- 摸摸可可 full-screen pet stage -->
+  <div id="petStage"><div class="dim"></div></div>
 
   <!-- Blobs -->
   <div class="fixed inset-0 pointer-events-none overflow-hidden" style="z-index:-1">
@@ -503,21 +546,24 @@
           <span id="catCounter" class="inline-block font-bold text-accent text-base mx-1">…</span>
           <span data-zh="次" data-en="times worldwide">次</span>
         </p>
+        <div class="reveal mt-6" data-delay="2">
+          <button class="pet-btn" onclick="petCat(event)"><span class="paw">🐾</span><span data-zh="摸摸可可" data-en="Pet Coco">摸摸可可</span></button>
+        </div>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="1" onclick="petCat(event)">
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="1">
           <img src="images/cat-tongue.jpg" alt="可可吐舌头" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="😛 吐舌头卖萌中" data-en="😛 Blep mode activated">😛 吐舌头卖萌中</div>
         </div>
-        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="2" onclick="petCat(event)">
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="2">
           <img src="images/cat-work.jpg" alt="可可陪加班" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="💤 陪爸爸加班累了" data-en="💤 Tired from overtime with dad">💤 陪爸爸加班累了</div>
         </div>
-        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="3" onclick="petCat(event)">
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="3">
           <img src="images/cat-stare.jpg" alt="可可凝视" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="👀 你谁？铲屎的女朋友？" data-en="👀 Who are you? Dad's girlfriend?">👀 你谁？铲屎的女朋友？</div>
         </div>
-        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="4" onclick="petCat(event)">
+        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="4">
           <img src="images/cat-peek.jpg" alt="可可偷看" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="🫣 偷偷看你呢" data-en="🫣 Secretly watching you">🫣 偷偷看你呢</div>
         </div>
@@ -1029,24 +1075,10 @@
       if(d&&typeof d.value==='number'){catCount=d.value;var c=document.getElementById('catCounter');if(c)c.textContent=catCount.toLocaleString();}
     }).catch(function(){/* offline: keep 0 */});
     function petCat(e){
-      var card=e.currentTarget;
-      // local instant feedback
-      card.classList.remove('petted');void card.offsetWidth;card.classList.add('petted');
-      var rect=card.getBoundingClientRect();
-      var float=document.createElement('span');
-      float.className='pet-float';
-      float.textContent=catEmojis[Math.floor(Math.random()*catEmojis.length)];
-      float.style.left=(e.clientX-rect.left)+'px';
-      float.style.top=(e.clientY-rect.top)+'px';
-      card.appendChild(float);
-      setTimeout(function(){float.remove()},1000);
-      // optimistic counter bump
+      // ── counter: optimistic bump + global sync ──
       catCount++;
       var counter=document.getElementById('catCounter');
       if(counter){counter.textContent=catCount.toLocaleString();counter.classList.remove('counter-pop');void counter.offsetWidth;counter.classList.add('counter-pop');}
-      // milestone confetti (based on global total)
-      if(catCount%100===0){var sec=counter&&counter.closest('section');if(sec)burstConfetti(sec.querySelector('.grid'));}
-      // sync to global counter (throttled — avoid spamming on rapid clicks)
       if(!catPetting){
         catPetting=true;
         setTimeout(function(){
@@ -1056,8 +1088,72 @@
           }).catch(function(){catPetting=false;});
         },400);
       }
+      // ── random full-screen effect ──
+      playPetEffect();
     }
     window.petCat=petCat;
+
+    /* ═══ 摸摸可可 — 4 random full-screen effects ═══ */
+    var petStage=document.getElementById('petStage');
+    var petBusy=false;
+    var nuzzleLines=lang==='zh'?['谢谢你摸摸我 喵~','蹭蹭你 ❤️','再摸一下嘛~','咕噜咕噜~','你的手好暖呀']:['Thanks for petting me~','Nuzzle nuzzle ❤️','One more pet please~','*purrs*','Your hand is so warm~'];
+    function petLine(){nuzzleLines=lang==='zh'?['谢谢你摸摸我 喵~','蹭蹭你 ❤️','再摸一下嘛~','咕噜咕噜~','你的手好暖呀']:['Thanks for petting me~','Nuzzle nuzzle ❤️','One more pet please~','*purrs*','Your hand is so warm~'];return nuzzleLines[Math.floor(Math.random()*nuzzleLines.length)];}
+    function showStage(ms){
+      petStage.classList.add('active');petBusy=true;
+      setTimeout(function(){petStage.classList.remove('active');petStage.textContent='';
+        var dim=document.createElement('div');dim.className='dim';petStage.appendChild(dim);petBusy=false;},ms);
+    }
+    function addToStage(node){petStage.appendChild(node);}
+    function playPetEffect(){
+      if(petBusy)return;
+      var which=Math.floor(Math.random()*4);
+      if(which===0)fxNuzzle();
+      else if(which===1)fxEmoji('rise');
+      else if(which===2)fxPeek();
+      else fxEmoji('drop');
+    }
+    // Effect 1: big cat face nuzzles in
+    function fxNuzzle(){
+      var img=document.createElement('img');
+      img.src='images/cat-tongue.jpg';img.className='pet-nuzzle';
+      var say=document.createElement('div');say.className='pet-speech';say.textContent=petLine();
+      addToStage(img);addToStage(say);
+      showStage(3600);
+    }
+    // Effect 3: cat peeks from a screen edge
+    function fxPeek(){
+      var img=document.createElement('img');
+      img.src='images/cat-peek.jpg';
+      img.className='pet-peek '+(Math.random()<0.5?'from-right':'from-left');
+      var say=document.createElement('div');say.className='pet-speech';say.textContent=petLine();
+      addToStage(img);addToStage(say);
+      showStage(3400);
+    }
+    // Effects 2 & 4: emoji rain (rise from bottom / drop from top)
+    function fxEmoji(dir){
+      var pool=['🐱','🐾','💛','🧡','😻','✨','💫','🐈','💕'];
+      var count=28;
+      for(var i=0;i<count;i++){
+        (function(idx){
+          var s=document.createElement('span');
+          s.className='pet-emoji';
+          s.textContent=pool[Math.floor(Math.random()*pool.length)];
+          var size=24+Math.floor(Math.random()*36);
+          s.style.fontSize=size+'px';
+          s.style.left=Math.floor(Math.random()*100)+'vw';
+          s.style.setProperty('--spin',(Math.random()<0.5?-1:1)*(180+Math.floor(Math.random()*360))+'deg');
+          var dur=2.2+Math.random()*1.6;
+          var delay=Math.random()*0.8;
+          if(dir==='rise'){s.style.bottom='-60px';s.style.animation='emojiRise '+dur+'s ease-in '+delay+'s forwards';}
+          else{s.style.top='-60px';s.style.animation='emojiDrop '+dur+'s ease-in '+delay+'s forwards';}
+          addToStage(s);
+        })(i);
+      }
+      showStage(3600);
+    }
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
