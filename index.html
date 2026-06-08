@@ -225,6 +225,33 @@
     .pet-emoji{position:absolute;pointer-events:none;will-change:transform,opacity}
     @keyframes emojiRise{0%{transform:translateY(0) scale(0.6) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(-110vh) scale(1.1) rotate(var(--spin,180deg));opacity:0}}
     @keyframes emojiDrop{0%{transform:translateY(-10vh) scale(0.5) rotate(0);opacity:0}10%{opacity:1}60%{opacity:1}100%{transform:translateY(110vh) scale(1) rotate(var(--spin,360deg));opacity:0}}
+
+    /* Effect 5: giant cat paw swipes in from an edge */
+    .pet-paw{position:absolute;width:160px;height:200px}
+    .pet-paw .pad{position:absolute;inset:0;background:#f4c2c2;border-radius:80px 80px 60px 60px;box-shadow:inset 0 -10px 20px rgba(0,0,0,0.08),0 12px 30px rgba(0,0,0,0.25)}
+    .pet-paw .bean{position:absolute;background:#e89b9b;border-radius:50%}
+    .pet-paw .bean.main{width:60px;height:48px;left:50px;top:30px}
+    .pet-paw .bean.t1{width:26px;height:30px;left:24px;top:6px}
+    .pet-paw .bean.t2{width:26px;height:32px;left:58px;top:-4px}
+    .pet-paw .bean.t3{width:26px;height:30px;left:92px;top:8px}
+    .pet-paw.swipe-right{right:-200px;top:50%;transform:translateY(-50%);animation:pawRight 2.6s cubic-bezier(0.34,1.56,0.64,1) forwards}
+    @keyframes pawRight{0%{right:-200px;transform:translateY(-50%) rotate(0)}28%{right:30px;transform:translateY(-50%) rotate(-12deg)}40%{right:10px;transform:translateY(-50%) rotate(8deg)}52%{right:40px;transform:translateY(-50%) rotate(-8deg)}64%{right:20px;transform:translateY(-50%) rotate(6deg)}80%{right:30px}100%{right:-200px;transform:translateY(-50%) rotate(0)}}
+    .pet-paw.swipe-left{left:-200px;top:50%;transform:translateY(-50%) scaleX(-1);animation:pawLeft 2.6s cubic-bezier(0.34,1.56,0.64,1) forwards}
+    @keyframes pawLeft{0%{left:-200px}28%{left:30px}40%{left:10px}52%{left:40px}64%{left:20px}80%{left:30px}100%{left:-200px}}
+
+    /* Effect 6: fish treats drop + Coco pops up to catch */
+    .pet-catcher{position:absolute;left:50%;bottom:-300px;width:260px;height:260px;border-radius:50% 50% 45% 45%;object-fit:cover;object-position:center 30%;transform:translateX(-50%);box-shadow:0 -10px 40px rgba(0,0,0,0.3);border:6px solid white;border-bottom:none;animation:catcherSeq 3.4s cubic-bezier(0.16,1,0.3,1) forwards}
+    @keyframes catcherSeq{0%{bottom:-300px}30%{bottom:-90px}45%{bottom:-70px}60%{bottom:-90px}78%{bottom:-90px}100%{bottom:-300px}}
+
+    /* Effect 8: yarn ball rolls across, paw bats it */
+    .pet-yarn{position:absolute;top:55%;left:-80px;width:64px;height:64px;font-size:64px;line-height:1;animation:yarnRoll 3s linear forwards}
+    @keyframes yarnRoll{0%{left:-80px;transform:rotate(0)}100%{left:110vw;transform:rotate(1440deg)}}
+
+    /* sleeping Zzz */
+    .pet-zzz{position:absolute;font-size:32px;opacity:0;animation:zzzFloat 2.6s ease-out forwards}
+    @keyframes zzzFloat{0%{opacity:0;transform:translateY(0) scale(0.6)}20%{opacity:0.9}100%{opacity:0;transform:translateY(-80px) scale(1.2)}}
+    .pet-sleeper{position:absolute;left:50%;bottom:-280px;width:300px;height:280px;border-radius:50% 50% 44% 44%;object-fit:cover;object-position:center 35%;transform:translateX(-50%);box-shadow:0 -10px 40px rgba(0,0,0,0.3);border:6px solid white;border-bottom:none;animation:sleeperSeq 4s ease-in-out forwards}
+    @keyframes sleeperSeq{0%{bottom:-280px}25%{bottom:-110px}50%{bottom:-100px}55%{bottom:-110px}60%{bottom:-100px}80%{bottom:-110px}100%{bottom:-280px}}
   </style>
 </head>
 <body>
@@ -1106,11 +1133,15 @@
     function addToStage(node){petStage.appendChild(node);}
     function playPetEffect(){
       if(petBusy)return;
-      var which=Math.floor(Math.random()*4);
+      var which=Math.floor(Math.random()*8);
       if(which===0)fxNuzzle();
       else if(which===1)fxEmoji('rise');
       else if(which===2)fxPeek();
-      else fxEmoji('drop');
+      else if(which===3)fxEmoji('drop');
+      else if(which===4)fxPaw();
+      else if(which===5)fxFish();
+      else if(which===6)fxSleep();
+      else fxYarn();
     }
     // Effect 1: big cat face nuzzles in
     function fxNuzzle(){
@@ -1151,9 +1182,75 @@
       }
       showStage(3600);
     }
-  </script>
-</body>
-</html>
+
+    // Effect 5: giant cat paw swipes in
+    function fxPaw(){
+      var paw=document.createElement('div');
+      paw.className='pet-paw '+(Math.random()<0.5?'swipe-right':'swipe-left');
+      paw.innerHTML='<div class="pad"></div><div class="bean main"></div><div class="bean t1"></div><div class="bean t2"></div><div class="bean t3"></div>';
+      var say=document.createElement('div');say.className='pet-speech';say.textContent=lang==='zh'?'喵呜！抓到你啦~':'Gotcha! 🐾';
+      addToStage(paw);addToStage(say);
+      showStage(2700);
+    }
+
+    // Effect 6: fish treats drop, Coco pops up to catch
+    function fxFish(){
+      var cat=document.createElement('img');
+      cat.src='images/cat-tongue.jpg';cat.className='pet-catcher';
+      addToStage(cat);
+      for(var i=0;i<14;i++){
+        (function(idx){
+          var f=document.createElement('span');
+          f.className='pet-emoji';
+          f.textContent=Math.random()<0.7?'🐟':'🐾';
+          f.style.fontSize=(26+Math.floor(Math.random()*20))+'px';
+          f.style.left=(20+Math.floor(Math.random()*60))+'vw';
+          f.style.top='-60px';
+          f.style.setProperty('--spin',(Math.random()<0.5?-1:1)*180+'deg');
+          f.style.animation='emojiDrop '+(1.8+Math.random()*0.8)+'s ease-in '+(Math.random()*0.6)+'s forwards';
+          addToStage(f);
+        })(i);
+      }
+      var say=document.createElement('div');say.className='pet-speech';say.textContent=lang==='zh'?'喂饭啦~ 喵！':'Treats! Nom nom~';
+      addToStage(say);
+      showStage(3400);
+    }
+
+    // Effect 7: Coco sleeps at the bottom with Zzz
+    function fxSleep(){
+      var cat=document.createElement('img');
+      cat.src='images/cat-work.jpg';cat.className='pet-sleeper';
+      addToStage(cat);
+      for(var i=0;i<5;i++){
+        (function(idx){
+          var z=document.createElement('span');
+          z.className='pet-zzz';z.textContent='💤';
+          z.style.left=(48+idx*3)+'vw';
+          z.style.bottom='150px';
+          z.style.animationDelay=(0.8+idx*0.4)+'s';
+          z.style.fontSize=(24+idx*4)+'px';
+          addToStage(z);
+        })(i);
+      }
+      var say=document.createElement('div');say.className='pet-speech';say.textContent=lang==='zh'?'嘘…可可睡着了 😴':'Shh… Coco is asleep 😴';
+      addToStage(say);
+      showStage(4000);
+    }
+
+    // Effect 8: yarn ball rolls across, paw bats it
+    function fxYarn(){
+      var yarn=document.createElement('div');
+      yarn.className='pet-yarn';yarn.textContent='🧶';
+      addToStage(yarn);
+      // a paw pops to bat it midway
+      setTimeout(function(){
+        var paw=document.createElement('div');
+        paw.className='pet-paw swipe-left';paw.style.top='62%';
+        paw.innerHTML='<div class="pad"></div><div class="bean main"></div><div class="bean t1"></div><div class="bean t2"></div><div class="bean t3"></div>';
+        addToStage(paw);
+      },900);
+      showStage(3100);
+    }
   </script>
 </body>
 </html>
