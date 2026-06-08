@@ -499,9 +499,9 @@
         </h2>
         <p class="text-stone-400 text-sm mt-3 max-w-md mx-auto" data-zh="加入这个家庭，你还会获得一只粘人的小猫咪（附赠猫毛若干）" data-en="Join this family and you'll also get a clingy kitty (cat hair included free)">加入这个家庭，你还会获得一只粘人的小猫咪（附赠猫毛若干）</p>
         <p class="text-xs text-stone-400 mt-4">
-          <span data-zh="🐾 可可已被摸了" data-en="🐾 Coco has been petted">🐾 可可已被摸了</span>
-          <span id="catCounter" class="inline-block font-bold text-accent text-base mx-1">0</span>
-          <span data-zh="次" data-en="times">次</span>
+          <span data-zh="🐾 可可已被全网摸了" data-en="🐾 Coco has been petted">🐾 可可已被全网摸了</span>
+          <span id="catCounter" class="inline-block font-bold text-accent text-base mx-1">…</span>
+          <span data-zh="次" data-en="times worldwide">次</span>
         </p>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1018,18 +1018,20 @@
     refreshSiteDays();
     window.refreshSiteDays=refreshSiteDays;
 
-    /* ═══ Cat petting easter egg ═══ */
-    var catCount=parseInt(localStorage.getItem('cocoPets')||'0');
+    /* ═══ Cat petting easter egg (global counter via Abacus) ═══ */
+    var CAT_API='https://abacus.jasoncameron.dev';
+    var CAT_NS='asher_fmc',CAT_KEY='coco_pets';
+    var catCount=0;
     var catEmojis=['🐾','💛','✨','😻','🧡','💫'];
-    (function(){var c=document.getElementById('catCounter');if(c)c.textContent=catCount;})();
+    var catPetting=false;
+    // load global total on page load (read-only, no increment)
+    fetch(CAT_API+'/get/'+CAT_NS+'/'+CAT_KEY).then(function(r){return r.json()}).then(function(d){
+      if(d&&typeof d.value==='number'){catCount=d.value;var c=document.getElementById('catCounter');if(c)c.textContent=catCount.toLocaleString();}
+    }).catch(function(){/* offline: keep 0 */});
     function petCat(e){
-      catCount++;
-      localStorage.setItem('cocoPets',catCount);
-      var counter=document.getElementById('catCounter');
-      if(counter){counter.textContent=catCount;counter.classList.remove('counter-pop');void counter.offsetWidth;counter.classList.add('counter-pop');}
       var card=e.currentTarget;
+      // local instant feedback
       card.classList.remove('petted');void card.offsetWidth;card.classList.add('petted');
-      // floating emoji at click point
       var rect=card.getBoundingClientRect();
       var float=document.createElement('span');
       float.className='pet-float';
@@ -1038,10 +1040,21 @@
       float.style.top=(e.clientY-rect.top)+'px';
       card.appendChild(float);
       setTimeout(function(){float.remove()},1000);
-      // milestone surprises
-      if(catCount===10||catCount===50||catCount===100){
-        var c2=document.getElementById('catCounter');
-        if(c2)burstConfetti(c2.closest('section').querySelector('.grid'));
+      // optimistic counter bump
+      catCount++;
+      var counter=document.getElementById('catCounter');
+      if(counter){counter.textContent=catCount.toLocaleString();counter.classList.remove('counter-pop');void counter.offsetWidth;counter.classList.add('counter-pop');}
+      // milestone confetti (based on global total)
+      if(catCount%100===0){var sec=counter&&counter.closest('section');if(sec)burstConfetti(sec.querySelector('.grid'));}
+      // sync to global counter (throttled — avoid spamming on rapid clicks)
+      if(!catPetting){
+        catPetting=true;
+        setTimeout(function(){
+          fetch(CAT_API+'/hit/'+CAT_NS+'/'+CAT_KEY).then(function(r){return r.json()}).then(function(d){
+            if(d&&typeof d.value==='number'){catCount=d.value;if(counter)counter.textContent=catCount.toLocaleString();}
+            catPetting=false;
+          }).catch(function(){catPetting=false;});
+        },400);
       }
     }
     window.petCat=petCat;
