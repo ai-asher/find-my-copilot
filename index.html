@@ -150,6 +150,41 @@
 
     /* Smooth counter animation for numbers */
     @keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ═══ "此刻" Live status card ═══ */
+    .live-card{display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border-radius:50px;background:rgba(255,255,255,0.7);backdrop-filter:blur(12px);border:1px solid #e7e5e4;font-size:13px;color:#57534e;box-shadow:0 4px 16px rgba(0,0,0,0.04)}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:#34d399;position:relative;flex-shrink:0}
+    .live-dot::after{content:'';position:absolute;inset:-4px;border-radius:50%;background:#34d399;opacity:0.4;animation:livePulse 2s ease-out infinite}
+    @keyframes livePulse{0%{transform:scale(1);opacity:0.5}100%{transform:scale(2.5);opacity:0}}
+
+    /* ═══ Cat counter easter egg ═══ */
+    .cat-pet{position:relative}
+    .cat-pet::before{content:'摸摸我 🐾';position:absolute;top:8px;right:8px;background:rgba(255,255,255,0.92);backdrop-filter:blur(8px);border-radius:50px;padding:4px 10px;font-size:10px;color:#a06b2d;opacity:0;transform:translateY(-4px);transition:all 0.3s;pointer-events:none;z-index:3}
+    .cat-pet:hover::before{opacity:1;transform:translateY(0)}
+    @keyframes catBounce{0%,100%{transform:scale(1)}30%{transform:scale(0.94) rotate(-2deg)}60%{transform:scale(1.04) rotate(2deg)}}
+    .cat-pet.petted img{animation:catBounce 0.5s cubic-bezier(0.16,1,0.3,1)}
+    .pet-float{position:absolute;pointer-events:none;font-size:18px;z-index:5;animation:petFloat 1s ease-out forwards}
+    @keyframes petFloat{0%{transform:translateY(0) scale(0.5);opacity:0}30%{opacity:1}100%{transform:translateY(-50px) scale(1.2);opacity:0}}
+    #catCounter{transition:all 0.3s}
+    .counter-pop{animation:counterPop 0.3s cubic-bezier(0.16,1,0.3,1)}
+    @keyframes counterPop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+    /* ═══ Flip reward cards ═══ */
+    .flip-card{perspective:1000px;cursor:pointer;height:130px}
+    .flip-inner{position:relative;width:100%;height:100%;transition:transform 0.6s cubic-bezier(0.16,1,0.3,1);transform-style:preserve-3d}
+    .flip-card.flipped .flip-inner{transform:rotateY(180deg)}
+    .flip-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center}
+    .flip-front{background:linear-gradient(135deg,#fdf8f0,#f9eed8);border:1px solid #f0dbb4}
+    .flip-back{background:linear-gradient(135deg,#e07a3a,#d4a056);color:white;transform:rotateY(180deg)}
+    .flip-front .q{font-size:32px;font-weight:700;color:#d4a056;font-family:'Playfair Display',serif}
+    .flip-hint{font-size:10px;color:#a8a29e;margin-top:6px}
+
+    /* ═══ Section transition wave divider ═══ */
+    .wave-divider{display:block;width:100%;height:40px;line-height:0}
+
+    /* ═══ Subtle floating animation for hero photo ═══ */
+    @keyframes heroFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .hero-photo-float{animation:heroFloat 6s ease-in-out infinite}
   </style>
 </head>
 <body>
@@ -212,11 +247,23 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg></a>
           <a href="#quiz" class="btn-outline btn-magnetic"><span data-zh="灵魂测试" data-en="Soul Match">灵魂测试</span> →</a>
         </div>
+        <!-- Live "此刻" status -->
+        <div class="reveal mt-8" data-delay="6">
+          <div class="live-card">
+            <span class="live-dot"></span>
+            <span data-zh="此刻 · 上海" data-en="Now · Shanghai">此刻 · 上海</span>
+            <span class="text-stone-300">|</span>
+            <span id="liveClock" class="font-medium text-stone-700">--:--</span>
+            <span class="text-stone-300">|</span>
+            <span id="liveStatus" data-zh="大概在写代码 ☕" data-en="probably coding ☕">大概在写代码 ☕</span>
+          </div>
+        </div>
       </div>
       <!-- Right photo -->
       <div class="reveal">
-        <div class="photo-card rounded-3xl shadow-2xl shadow-stone-200/50">
+        <div class="photo-card rounded-3xl shadow-2xl shadow-stone-200/50 hero-photo-float">
           <img src="images/ski.jpg" alt="Asher skiing" class="w-full aspect-[4/5] object-cover object-top">
+          <div class="absolute top-4 right-4 bg-white/85 backdrop-blur-md rounded-full px-3 py-1.5 text-[11px] font-medium text-stone-700"><span id="siteDays">🌟 已上线 0 天</span></div>
         </div>
       </div>
     </div>
@@ -451,21 +498,26 @@
           <span data-zh="室友" data-en="Roommate">室友</span> <span style="color:#e07a3a" data-zh="可可" data-en="Coco">可可</span> <span class="text-3xl">🐱</span>
         </h2>
         <p class="text-stone-400 text-sm mt-3 max-w-md mx-auto" data-zh="加入这个家庭，你还会获得一只粘人的小猫咪（附赠猫毛若干）" data-en="Join this family and you'll also get a clingy kitty (cat hair included free)">加入这个家庭，你还会获得一只粘人的小猫咪（附赠猫毛若干）</p>
+        <p class="text-xs text-stone-400 mt-4">
+          <span data-zh="🐾 可可已被摸了" data-en="🐾 Coco has been petted">🐾 可可已被摸了</span>
+          <span id="catCounter" class="inline-block font-bold text-accent text-base mx-1">0</span>
+          <span data-zh="次" data-en="times">次</span>
+        </p>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="1">
+        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="1" onclick="petCat(event)">
           <img src="images/cat-tongue.jpg" alt="可可吐舌头" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="😛 吐舌头卖萌中" data-en="😛 Blep mode activated">😛 吐舌头卖萌中</div>
         </div>
-        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="2">
+        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="2" onclick="petCat(event)">
           <img src="images/cat-work.jpg" alt="可可陪加班" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="💤 陪爸爸加班累了" data-en="💤 Tired from overtime with dad">💤 陪爸爸加班累了</div>
         </div>
-        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="3">
+        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="3" onclick="petCat(event)">
           <img src="images/cat-stare.jpg" alt="可可凝视" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="👀 你谁？铲屎的女朋友？" data-en="👀 Who are you? Dad's girlfriend?">👀 你谁？铲屎的女朋友？</div>
         </div>
-        <div class="reveal photo-card shadow-lg shadow-stone-200/30 aspect-square" data-delay="4">
+        <div class="reveal photo-card cat-pet shadow-lg shadow-stone-200/30 aspect-square" data-delay="4" onclick="petCat(event)">
           <img src="images/cat-peek.jpg" alt="可可偷看" class="w-full h-full object-cover">
           <div class="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md rounded-full px-3 py-1 text-[10px] text-stone-600" data-zh="🫣 偷偷看你呢" data-en="🫣 Secretly watching you">🫣 偷偷看你呢</div>
         </div>
@@ -495,13 +547,33 @@
             </ul>
           </div>
           <div>
-            <h4 class="text-xs tracking-[0.2em] uppercase text-stone-400 font-medium mb-4" data-zh="你将获得" data-en="You'll get">你将获得</h4>
-            <ul class="space-y-3 text-sm text-stone-600">
-              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="随叫随到的专属司机" data-en="Personal driver, anytime">随叫随到的专属司机</span></li>
-              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="说走就走的旅行搭子" data-en="Spontaneous travel buddy">说走就走的旅行搭子</span></li>
-              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="全天候技术支持（修电脑免费）" data-en="24/7 tech support (free!)">全天候技术支持（修电脑免费）</span></li>
-              <li class="flex gap-2"><span class="text-accent">◈</span><span data-zh="一起体验细碎和浪漫的美好" data-en="Sharing life's small beautiful moments">一起体验细碎和浪漫的美好</span></li>
-            </ul>
+            <h4 class="text-xs tracking-[0.2em] uppercase text-stone-400 font-medium mb-4" data-zh="你将获得（点击翻开）" data-en="You'll get (tap to flip)">你将获得（点击翻开）</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                  <div class="flip-face flip-front"><span class="q">?</span><span class="flip-hint" data-zh="点击揭晓" data-en="tap to reveal">点击揭晓</span></div>
+                  <div class="flip-face flip-back"><span class="text-2xl mb-1">🚗</span><span class="text-xs font-medium" data-zh="随叫随到的专属司机" data-en="Personal driver, anytime">随叫随到的专属司机</span></div>
+                </div>
+              </div>
+              <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                  <div class="flip-face flip-front"><span class="q">?</span><span class="flip-hint" data-zh="点击揭晓" data-en="tap to reveal">点击揭晓</span></div>
+                  <div class="flip-face flip-back"><span class="text-2xl mb-1">✈️</span><span class="text-xs font-medium" data-zh="说走就走的旅行搭子" data-en="Spontaneous travel buddy">说走就走的旅行搭子</span></div>
+                </div>
+              </div>
+              <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                  <div class="flip-face flip-front"><span class="q">?</span><span class="flip-hint" data-zh="点击揭晓" data-en="tap to reveal">点击揭晓</span></div>
+                  <div class="flip-face flip-back"><span class="text-2xl mb-1">💻</span><span class="text-xs font-medium" data-zh="全天候技术支持（免费）" data-en="24/7 tech support (free!)">全天候技术支持（免费）</span></div>
+                </div>
+              </div>
+              <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-inner">
+                  <div class="flip-face flip-front"><span class="q">?</span><span class="flip-hint" data-zh="点击揭晓" data-en="tap to reveal">点击揭晓</span></div>
+                  <div class="flip-face flip-back"><span class="text-2xl mb-1">🧡</span><span class="text-xs font-medium" data-zh="细碎又浪漫的日常" data-en="Small romantic moments">细碎又浪漫的日常</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -589,6 +661,8 @@
       document.getElementById('langToggle').textContent=lang==='zh'?'中 / EN':'EN / 中';
       startTyping();
       renderQ();
+      if(window.updateLive)window.updateLive();
+      if(window.refreshSiteDays)window.refreshSiteDays();
     }
 
     /* ═══ Scroll Progress Bar ═══ */
@@ -907,6 +981,70 @@
         if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'})}
       });
     });
+
+    /* ═══ "此刻" Live clock + status ═══ */
+    function updateLive(){
+      var now=new Date();
+      // Shanghai time (UTC+8) regardless of viewer timezone
+      var sh=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Shanghai'}));
+      var h=sh.getHours(),m=sh.getMinutes();
+      var clk=document.getElementById('liveClock');
+      if(clk)clk.textContent=(h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+      var statusEl=document.getElementById('liveStatus');
+      if(statusEl){
+        var zh,en;
+        if(h>=0&&h<7){zh='大概在睡觉 😴';en='probably asleep 😴';}
+        else if(h>=7&&h<9){zh='刚醒，喝杯咖啡 ☕';en='just woke up, coffee time ☕';}
+        else if(h>=9&&h<12){zh='大概在写代码 💻';en='probably coding 💻';}
+        else if(h>=12&&h<14){zh='干饭时间 🍜';en='lunch break 🍜';}
+        else if(h>=14&&h<18){zh='搬砖 / 开会中 🧱';en='deep at work 🧱';}
+        else if(h>=18&&h<20){zh='探店 / 健身 🏊';en='dinner or gym 🏊';}
+        else if(h>=20&&h<23){zh='陪可可 vibe coding 🐱';en='vibe coding with Coco 🐱';}
+        else{zh='夜猫子时间 🌙';en='night owl mode 🌙';}
+        statusEl.setAttribute('data-zh',zh);statusEl.setAttribute('data-en',en);
+        statusEl.textContent=lang==='zh'?zh:en;
+      }
+    }
+    updateLive();setInterval(updateLive,30000);
+    window.updateLive=updateLive;
+
+    /* ═══ Days since launch ═══ */
+    function refreshSiteDays(){
+      var launch=new Date('2026-04-01T00:00:00+08:00');
+      var days=Math.max(0,Math.floor((Date.now()-launch.getTime())/86400000));
+      var el=document.getElementById('siteDays');
+      if(el)el.textContent=(lang==='zh'?'🌟 已上线 '+days+' 天':'🌟 Live '+days+' days');
+    }
+    refreshSiteDays();
+    window.refreshSiteDays=refreshSiteDays;
+
+    /* ═══ Cat petting easter egg ═══ */
+    var catCount=parseInt(localStorage.getItem('cocoPets')||'0');
+    var catEmojis=['🐾','💛','✨','😻','🧡','💫'];
+    (function(){var c=document.getElementById('catCounter');if(c)c.textContent=catCount;})();
+    function petCat(e){
+      catCount++;
+      localStorage.setItem('cocoPets',catCount);
+      var counter=document.getElementById('catCounter');
+      if(counter){counter.textContent=catCount;counter.classList.remove('counter-pop');void counter.offsetWidth;counter.classList.add('counter-pop');}
+      var card=e.currentTarget;
+      card.classList.remove('petted');void card.offsetWidth;card.classList.add('petted');
+      // floating emoji at click point
+      var rect=card.getBoundingClientRect();
+      var float=document.createElement('span');
+      float.className='pet-float';
+      float.textContent=catEmojis[Math.floor(Math.random()*catEmojis.length)];
+      float.style.left=(e.clientX-rect.left)+'px';
+      float.style.top=(e.clientY-rect.top)+'px';
+      card.appendChild(float);
+      setTimeout(function(){float.remove()},1000);
+      // milestone surprises
+      if(catCount===10||catCount===50||catCount===100){
+        var c2=document.getElementById('catCounter');
+        if(c2)burstConfetti(c2.closest('section').querySelector('.grid'));
+      }
+    }
+    window.petCat=petCat;
   </script>
 </body>
 </html>
