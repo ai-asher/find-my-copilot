@@ -265,9 +265,63 @@
     @keyframes superShine{to{background-position:200% center}}
     .super-particle{position:absolute;left:50%;top:50%;pointer-events:none;will-change:transform,opacity}
     @keyframes superFly{0%{transform:translate(-50%,-50%) scale(0.3);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1) rotate(var(--rot,360deg));opacity:0}}
+
+    /* ═══ A. Mouse glow + petal trail ═══ */
+    #mouseGlow{position:fixed;width:520px;height:520px;border-radius:50%;pointer-events:none;z-index:1;background:radial-gradient(circle,rgba(224,122,58,0.10) 0%,rgba(212,160,86,0.05) 35%,transparent 70%);transform:translate(-50%,-50%);opacity:0;transition:opacity 0.6s;mix-blend-mode:multiply}
+    body.has-pointer #mouseGlow{opacity:1}
+    .trail-petal{position:fixed;pointer-events:none;z-index:2;will-change:transform,opacity;animation:trailFade 1.2s ease-out forwards}
+    @keyframes trailFade{0%{opacity:0.9;transform:translate(-50%,-50%) scale(0.5) rotate(0)}100%{opacity:0;transform:translate(calc(-50% + var(--tx,20px)),calc(-50% + var(--ty,40px))) scale(1.1) rotate(var(--tr,120deg))}}
+
+    /* ═══ B. Scroll parallax / cinematic hero ═══ */
+    .hero-cinema{will-change:transform,opacity}
+    .plx{will-change:transform;transition:none!important}
+
+    /* ═══ C. Opening ceremony ═══ */
+    #opening{position:fixed;inset:0;z-index:10000;background:#faf8f5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;transition:transform 1s cubic-bezier(0.76,0,0.24,1);cursor:pointer}
+    #opening.lift{transform:translateY(-100%)}
+    #opening.gone{display:none}
+    #opening svg{width:min(340px,70vw);height:auto;overflow:visible}
+    #opening .sig-path{fill:none;stroke:#e07a3a;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:900;stroke-dashoffset:900;animation:sigDraw 1.6s cubic-bezier(0.65,0,0.35,1) 0.2s forwards}
+    @keyframes sigDraw{to{stroke-dashoffset:0}}
+    #opening.text-in .sig-path{fill:#e07a3a;transition:fill 0.6s 0.1s}
+    #opening .sub{font-size:13px;letter-spacing:0.35em;text-transform:uppercase;color:#a8a29e;opacity:0;transition:opacity 0.8s}
+    #opening.text-in .sub{opacity:1}
+    #opening .skip{position:absolute;bottom:28px;font-size:11px;color:#d6d3d1;letter-spacing:0.1em}
+    .open-petal{position:absolute;pointer-events:none;will-change:transform,opacity;animation:openBurst 1.4s cubic-bezier(0.16,1,0.3,1) forwards}
+    @keyframes openBurst{0%{transform:translate(-50%,-50%) scale(0.4);opacity:1}100%{transform:translate(calc(-50% + var(--bx)),calc(-50% + var(--by))) scale(1.2) rotate(var(--br,200deg));opacity:0}}
+
+    /* ═══ D. Micro-interactions ═══ */
+    .photo-card .sheen{position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.45) 50%,transparent 60%);transform:translateX(-120%);pointer-events:none;z-index:2}
+    .photo-card:hover .sheen{animation:sheenSweep 0.9s cubic-bezier(0.4,0,0.2,1) forwards}
+    @keyframes sheenSweep{to{transform:translateX(120%)}}
+    .marquee-band{overflow:hidden;border-top:1px solid #f0dbb4;border-bottom:1px solid #f0dbb4;background:#fdf8f0;padding:18px 0}
+    .marquee-track{display:flex;gap:48px;width:max-content;animation:marqueeMove 28s linear infinite;white-space:nowrap}
+    .marquee-band:hover .marquee-track{animation-play-state:paused}
+    .marquee-track span{font-family:'Playfair Display',serif;font-size:15px;color:#a06b2d;display:inline-flex;align-items:center;gap:10px}
+    .marquee-track span::after{content:'◈';color:#e07a3a;font-size:10px;margin-left:38px}
+    @keyframes marqueeMove{to{transform:translateX(-50%)}}
+
+    /* respect reduced motion */
+    @media (prefers-reduced-motion:reduce){
+      #mouseGlow,.trail-petal,.open-petal{display:none!important}
+      #opening{transition:none}
+      .marquee-track{animation:none}
+    }
   </style>
 </head>
 <body>
+
+  <!-- Opening ceremony (first visit per session) -->
+  <div id="opening">
+    <svg viewBox="0 0 320 110" aria-hidden="true">
+      <text x="50%" y="68" text-anchor="middle" class="sig-path" style="font-family:'Playfair Display',serif;font-size:72px;font-weight:700">Asher.</text>
+    </svg>
+    <div class="sub" data-zh="FIND MY CO-PILOT" data-en="FIND MY CO-PILOT">FIND MY CO-PILOT</div>
+    <div class="skip" data-zh="点击任意处跳过" data-en="click to skip">点击任意处跳过</div>
+  </div>
+
+  <!-- Mouse glow spotlight -->
+  <div id="mouseGlow"></div>
 
   <!-- Scroll Progress Bar -->
   <div id="scrollProgress"></div>
@@ -306,8 +360,8 @@
   </nav>
 
   <!-- ═══ HERO ═══ -->
-  <section class="min-h-screen flex items-center px-6 pt-20">
-    <div class="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+  <section class="min-h-screen flex items-center px-6 pt-20" style="overflow:hidden">
+    <div id="heroInner" class="hero-cinema max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       <!-- Left text -->
       <div>
         <div class="reveal" data-delay="1">
@@ -571,6 +625,11 @@
       </div>
     </div>
   </section>
+
+  <!-- Interests marquee band -->
+  <div class="marquee-band" aria-hidden="true">
+    <div class="marquee-track" id="marqueeTrack"></div>
+  </div>
 
   <!-- ═══ CAT — FAMILY MEMBER ═══ -->
   <section class="py-28 px-6 bg-white">
@@ -1326,6 +1385,131 @@
       },3600);
       petStage.classList.add('active');
     }
+
+    /* ═══ A. Mouse glow spotlight + petal trail ═══ */
+    (function(){
+      var fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+      var reduced=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+      if(!fine||reduced)return;
+      document.body.classList.add('has-pointer');
+      var glow=document.getElementById('mouseGlow');
+      var mx=innerWidth/2,my=innerHeight/2,gx=mx,gy=my;
+      var lastTrail=0,trailCount=0;
+      document.addEventListener('mousemove',function(e){
+        mx=e.clientX;my=e.clientY;
+        var now=performance.now();
+        if(now-lastTrail>90&&trailCount<24){
+          lastTrail=now;trailCount++;
+          var t=document.createElement('span');
+          t.className='trail-petal';
+          t.textContent=Math.random()<0.6?'🌸':(Math.random()<0.5?'✨':'·');
+          t.style.cssText='left:'+mx+'px;top:'+my+'px;font-size:'+(8+Math.random()*10)+'px;opacity:0.8';
+          t.style.setProperty('--tx',((Math.random()-0.5)*60).toFixed(0)+'px');
+          t.style.setProperty('--ty',(30+Math.random()*50).toFixed(0)+'px');
+          t.style.setProperty('--tr',((Math.random()-0.5)*240).toFixed(0)+'deg');
+          document.body.appendChild(t);
+          setTimeout(function(){t.remove();trailCount--},1200);
+        }
+      },{passive:true});
+      (function tick(){
+        gx+=(mx-gx)*0.08;gy+=(my-gy)*0.08;
+        glow.style.left=gx+'px';glow.style.top=gy+'px';
+        requestAnimationFrame(tick);
+      })();
+    })();
+
+    /* ═══ B. Cinematic hero + photo-wall parallax ═══ */
+    (function(){
+      var reduced=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+      if(reduced)return;
+      var hero=document.getElementById('heroInner');
+      var wall=document.querySelectorAll('.grid.auto-rows-\\[200px\\] > div, .grid[class*="auto-rows"] > div');
+      var wallArr=Array.prototype.slice.call(wall);
+      var ticking=false;
+      function onScroll(){
+        if(ticking)return;ticking=true;
+        requestAnimationFrame(function(){
+          var y=window.scrollY;
+          // hero shrinks + fades like a film title
+          if(hero&&y<innerHeight){
+            var p=Math.min(1,y/(innerHeight*0.9));
+            hero.style.transform='scale('+(1-p*0.08)+') translateY('+(p*40)+'px)';
+            hero.style.opacity=String(1-p*0.9);
+          }
+          // photo wall columns drift at different speeds (desktop only)
+          if(innerWidth>=768&&wallArr.length){
+            wallArr.forEach(function(card,i){
+              var r=card.getBoundingClientRect();
+              if(r.top<innerHeight&&r.bottom>0&&card.classList.contains('visible')){
+                var mid=(r.top+r.bottom)/2-innerHeight/2;
+                var speed=[0.04,-0.03,0.05,-0.045][i%4];
+                var off=Math.max(-26,Math.min(26,mid*speed));
+                card.style.transform='translateY('+off.toFixed(1)+'px)';
+              }
+            });
+          }
+          ticking=false;
+        });
+      }
+      window.addEventListener('scroll',onScroll,{passive:true});
+    })();
+
+    /* ═══ C. Opening ceremony (once per session) ═══ */
+    (function(){
+      var op=document.getElementById('opening');
+      if(!op)return;
+      if(sessionStorage.getItem('openingSeen')){op.classList.add('gone');return}
+      sessionStorage.setItem('openingSeen','1');
+      var done=false;
+      function finish(){
+        if(done)return;done=true;
+        // petal burst from center
+        var petals=['🌸','💮','🌷','✨','💛'];
+        for(var i=0;i<26;i++){
+          var s=document.createElement('span');
+          s.className='open-petal';
+          s.textContent=petals[Math.floor(Math.random()*petals.length)];
+          var ang=Math.random()*Math.PI*2,d=100+Math.random()*300;
+          s.style.cssText='left:50%;top:50%;font-size:'+(16+Math.random()*22)+'px';
+          s.style.setProperty('--bx',(Math.cos(ang)*d).toFixed(0)+'px');
+          s.style.setProperty('--by',(Math.sin(ang)*d).toFixed(0)+'px');
+          s.style.setProperty('--br',((Math.random()-0.5)*480).toFixed(0)+'deg');
+          op.appendChild(s);
+        }
+        setTimeout(function(){op.classList.add('lift')},650);
+        setTimeout(function(){op.classList.add('gone')},1700);
+      }
+      setTimeout(function(){op.classList.add('text-in')},1500);
+      setTimeout(finish,2600);
+      op.addEventListener('click',finish);
+    })();
+
+    /* ═══ D. Micro-interactions ═══ */
+    // magnetic buttons
+    (function(){
+      if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches)return;
+      document.querySelectorAll('.btn-magnetic,.pet-btn').forEach(function(btn){
+        btn.addEventListener('mousemove',function(e){
+          var r=btn.getBoundingClientRect();
+          var dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+          btn.style.transform='translate('+(dx*0.22).toFixed(1)+'px,'+(dy*0.22).toFixed(1)+'px)';
+        });
+        btn.addEventListener('mouseleave',function(){btn.style.transform=''});
+      });
+    })();
+    // photo sheen sweep
+    document.querySelectorAll('.photo-card').forEach(function(card){
+      var sheen=document.createElement('div');sheen.className='sheen';card.appendChild(sheen);
+    });
+    // interests marquee
+    (function(){
+      var track=document.getElementById('marqueeTrack');
+      if(!track)return;
+      var items=['🚗 自驾游','✈️ 旅行','🍜 探店','⛺ 露营','🎿 滑雪','🏊 游泳','🎮 游戏','💻 Vibe Coding','🐱 撸猫','📍 上海'];
+      var html='';
+      items.concat(items).forEach(function(it){html+='<span>'+it+'</span>'});
+      track.innerHTML=html;
+    })();
   </script>
 </body>
 </html>
