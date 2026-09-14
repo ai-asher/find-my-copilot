@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Find My Co-pilot — Asher</title>
+  <title>Astra — Asher's Personal Orbit</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script>
@@ -307,6 +307,19 @@
       #opening{transition:none}
       .marquee-track{animation:none}
     }
+  </style>
+  <style>
+    :root{--astra-bg:#08090d;--astra-panel:#11131a;--astra-line:#252833;--astra-ink:#f2f4f8;--astra-muted:#8b909e;--astra-cyan:#9fe8ff;--astra-violet:#9e8cff}
+    body{background:var(--astra-bg);color:var(--astra-ink);font-family:'Inter','Noto Sans SC',sans-serif}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-2;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(to bottom,#000,transparent 90%)}
+    body:after{content:"";position:fixed;inset:-20%;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 75% 5%,#5d50c533,transparent 32%),radial-gradient(ellipse at 15% 40%,#28b9d420,transparent 30%);filter:blur(55px);animation:astraDrift 18s ease-in-out infinite alternate}@keyframes astraDrift{to{transform:translate3d(3%,2%,0) scale(1.08)}}
+    nav{background:linear-gradient(#08090df2,transparent)!important;border-color:transparent!important}nav.scrolled{background:#08090df2!important;border-color:var(--astra-line)!important}
+    nav a:first-child{color:var(--astra-ink)!important;letter-spacing:.12em}nav a:first-child:after{background:var(--astra-cyan)!important}
+    h1,h2,h3{letter-spacing:-.07em!important;color:var(--astra-ink)!important}h1 span,h2 span{color:transparent!important;-webkit-text-stroke:1px #798091}h1 span[style],h2 span[style]{background:linear-gradient(100deg,var(--astra-cyan),#b99eff 80%);-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+    .tag{border-color:#9fe8ff55!important;background:#9fe8ff0d!important;color:var(--astra-cyan)!important}.btn-primary{background:linear-gradient(100deg,var(--astra-cyan),#9e8cff)!important;color:#08090d!important;box-shadow:0 8px 30px #9fe8ff22}.btn-outline{color:var(--astra-ink)!important;border-color:var(--astra-line)!important}.btn-outline:hover{color:var(--astra-cyan)!important;border-color:var(--astra-cyan)!important}
+    .card,.live-card,.photo-card{background:var(--astra-panel)!important;border-color:var(--astra-line)!important;color:var(--astra-ink)}.live-card{color:var(--astra-muted)!important}.photo-card img{filter:saturate(.72) contrast(1.08)}.blob{opacity:.08!important}.divider{background:var(--astra-line)}.text-stone-900,.text-stone-800,.text-stone-700{color:var(--astra-ink)!important}.text-stone-500,.text-stone-400{color:var(--astra-muted)!important}.bg-white{background:var(--astra-panel)!important}.border-stone-100,.border-stone-200{border-color:var(--astra-line)!important}.marquee-track span{color:var(--astra-cyan)!important}
+    #scrollProgress{background:linear-gradient(90deg,var(--astra-cyan),var(--astra-violet));box-shadow:0 0 14px #9fe8ff88}
+    @media(max-width:640px){h1{font-size:3.5rem!important}}
   </style>
 </head>
 <body>
