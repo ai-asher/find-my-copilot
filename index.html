@@ -306,7 +306,59 @@
       #mouseGlow,.trail-petal,.open-petal{display:none!important}
       #opening{transition:none}
       .marquee-track{animation:none}
+      .night-photo{animation:none!important}
     }
+
+    /* ═══ E. Night-sky hero (shot in New Zealand) ═══ */
+    .hero-night{position:relative;isolation:isolate;background:#05070d}
+    .night-sky{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+    .night-photo{position:absolute;inset:-6% -3%;background:url('images/nz-milkyway.jpg') 62% 40%/cover no-repeat;animation:nightZoom 28s cubic-bezier(0.16,1,0.3,1) both;will-change:transform}
+    @keyframes nightZoom{from{transform:scale(1.14)}to{transform:scale(1)}}
+    #starCanvas{position:absolute;inset:0;width:100%;height:100%}
+    .night-veil{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 72% 38%,transparent 0%,rgba(5,7,13,0.25) 70%),linear-gradient(90deg,rgba(5,7,13,0.78) 0%,rgba(5,7,13,0.42) 48%,rgba(5,7,13,0.12) 100%)}
+    .night-fade{position:absolute;left:0;right:0;bottom:0;height:24vh;background:linear-gradient(to bottom,rgba(250,248,245,0) 0%,rgba(240,219,180,0.05) 30%,rgba(244,226,203,0.40) 62%,rgba(250,248,245,0.88) 84%,#faf8f5 100%)}
+    .hero-night h1.text-stone-900{color:#f7f2ea}
+    .hero-night #heroTyping{background:linear-gradient(100deg,#ffe2b3 0%,#f3b878 45%,#e07a3a 100%);-webkit-background-clip:text;background-clip:text;color:transparent!important;text-shadow:none}
+    .hero-night .typing-cursor{background:#f3b878}
+    .hero-night .text-stone-500{color:rgba(247,242,234,0.80)}
+    .hero-night .text-stone-400{color:rgba(247,242,234,0.58)}
+    .hero-night .text-stone-300{color:rgba(247,242,234,0.25)}
+    .hero-night .tag{color:#f6d6a8!important;border-color:rgba(246,214,168,0.28)!important;background:rgba(246,214,168,0.07)!important;backdrop-filter:blur(10px)}
+    .hero-night .btn-outline{color:#f7f2ea;border-color:rgba(247,242,234,0.28)}
+    .hero-night .btn-outline:hover{color:#f6d6a8;border-color:#f6d6a8;box-shadow:0 4px 24px rgba(246,214,168,0.15)}
+    .hero-night .btn-primary:hover{box-shadow:0 8px 40px rgba(243,184,120,0.45)}
+    .hero-night .live-card{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:rgba(247,242,234,0.75);box-shadow:none}
+    .hero-night #liveClock{color:#fff}
+    .hero-night .photo-card{box-shadow:0 40px 90px -30px rgba(0,0,0,0.85),0 0 0 1px rgba(255,255,255,0.10),0 0 80px -10px rgba(158,184,255,0.18)}
+    .hero-night .photo-card img{filter:saturate(1.04)}
+    .sky-hint{font-size:11px;letter-spacing:0.18em;color:rgba(247,242,234,0.42);display:inline-flex;align-items:center;gap:8px;transition:color 0.3s}
+    .hero-night:hover .sky-hint{color:rgba(247,242,234,0.62)}
+    .sky-hint i{display:inline-block;width:5px;height:5px;border-radius:50%;background:#f6d6a8;box-shadow:0 0 10px 2px rgba(246,214,168,0.7);animation:hintTwinkle 2.4s ease-in-out infinite}
+    @keyframes hintTwinkle{0%,100%{opacity:0.35;transform:scale(0.7)}50%{opacity:1;transform:scale(1)}}
+
+    /* nav while floating over the night sky */
+    nav{transition:background-color 0.5s,border-color 0.5s}
+    body.is-night nav{background:transparent!important;border-color:transparent!important;backdrop-filter:none}
+    body.is-night nav a:first-child{color:#f7f2ea}
+    body.is-night .nav-a{color:rgba(247,242,234,0.66)}
+    body.is-night .nav-a:hover{color:#fff}
+    body.is-night #langToggle{color:rgba(247,242,234,0.7);border-color:rgba(247,242,234,0.25)}
+
+    /* ═══ F. New Zealand chapter ═══ */
+    .nz-chapter{position:relative;isolation:isolate;color:#f7f2ea;background:linear-gradient(to bottom,#fff 0,#0a0d17 220px,#080b14 calc(100% - 220px),#faf8f5 100%)}
+    .nz-stars{position:absolute;inset:220px 0;z-index:-1;pointer-events:none;background-repeat:repeat;opacity:0.9;-webkit-mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(transparent,#000 18%,#000 82%,transparent)}
+    .nz-stars.b{animation:hintTwinkle 6s ease-in-out infinite;opacity:0.6}
+    .nz-chapter .eyebrow{font-size:12px;letter-spacing:0.32em;text-transform:uppercase;color:#f3b878}
+    .nz-chapter h2{color:#f7f2ea}
+    .nz-chapter h2 em{font-style:italic;font-weight:400;background:linear-gradient(100deg,#ffe2b3,#f3b878 60%,#e07a3a);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .nz-chapter .lede{color:rgba(247,242,234,0.62)}
+    .nz-chapter .photo-card{box-shadow:0 30px 70px -30px rgba(0,0,0,0.9),0 0 0 1px rgba(255,255,255,0.07)}
+    .nz-chapter .photo-card::after{background:linear-gradient(transparent 55%,rgba(0,0,0,0.45));opacity:1}
+    .nz-chapter .photo-card:hover{box-shadow:0 30px 70px -30px rgba(0,0,0,0.9),0 0 0 1px rgba(246,214,168,0.35),0 0 60px -12px rgba(246,214,168,0.25)}
+    .nz-pill{position:absolute;bottom:14px;left:14px;z-index:3;display:flex;flex-direction:column;gap:2px;padding:8px 14px;border-radius:14px;background:rgba(8,10,18,0.42);border:1px solid rgba(255,255,255,0.12);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);font-size:11px;color:#f7f2ea;line-height:1.35}
+    .nz-pill small{font-size:9.5px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(247,242,234,0.55)}
+    .nz-coda{font-family:'Playfair Display','Noto Sans SC',serif;color:rgba(247,242,234,0.78)}
+    .nz-coda b{font-weight:500;color:#f6d6a8}
   </style>
 </head>
 <body>
@@ -360,7 +412,14 @@
   </nav>
 
   <!-- ═══ HERO ═══ -->
-  <section class="min-h-screen flex items-center px-6 pt-20" style="overflow:hidden">
+  <section id="nightHero" class="hero-night min-h-screen flex items-center px-6 pt-20 pb-24" style="overflow:hidden">
+    <!-- Milky Way over New Zealand + live twinkling layer -->
+    <div class="night-sky" aria-hidden="true">
+      <div class="night-photo" id="nightPhoto"></div>
+      <canvas id="starCanvas"></canvas>
+      <div class="night-veil"></div>
+      <div class="night-fade"></div>
+    </div>
     <div id="heroInner" class="hero-cinema max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
       <!-- Left text -->
       <div>
@@ -395,12 +454,16 @@
             <span id="liveStatus" data-zh="大概在写代码 ☕" data-en="probably coding ☕">大概在写代码 ☕</span>
           </div>
         </div>
+        <div class="reveal mt-10 hidden sm:block" data-delay="7">
+          <span class="sky-hint"><i></i><span data-zh="背景是我在新西兰看到的银河 · 点一下夜空，许个愿" data-en="The Milky Way I saw in New Zealand · tap the sky, make a wish">背景是我在新西兰看到的银河 · 点一下夜空，许个愿</span></span>
+        </div>
       </div>
       <!-- Right photo -->
       <div class="reveal">
-        <div class="photo-card rounded-3xl shadow-2xl shadow-stone-200/50 hero-photo-float">
-          <img src="images/ski.jpg" alt="Asher skiing" class="w-full aspect-[4/5] object-cover object-top">
+        <div class="photo-card rounded-3xl hero-photo-float">
+          <img src="images/nz-glenorchy.jpg" alt="Asher at Lake Wakatipu, Glenorchy, New Zealand" class="w-full aspect-[4/5] object-cover object-[70%_center]">
           <div class="absolute top-4 right-4 bg-white/85 backdrop-blur-md rounded-full px-3 py-1.5 text-[11px] font-medium text-stone-700"><span id="siteDays">🌟 已上线 0 天</span></div>
+          <div class="nz-pill"><small>Glenorchy · New Zealand</small><span data-zh="瓦卡蒂普湖边，背后是雪山" data-en="Lake Wakatipu, snow peaks behind">瓦卡蒂普湖边，背后是雪山</span></div>
         </div>
       </div>
     </div>
@@ -567,7 +630,7 @@
       </div>
       <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
         <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="1"><div class="text-3xl mb-3 hobby-emoji">🚗</div><h4 class="font-semibold text-sm mb-1" data-zh="自驾游" data-en="Road Trips">自驾游</h4><p class="text-xs text-stone-400" data-zh="说走就走的浪漫" data-en="Spontaneous adventures">说走就走的浪漫</p></div>
-        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="2"><div class="text-3xl mb-3 hobby-emoji">✈️</div><h4 class="font-semibold text-sm mb-1" data-zh="旅行" data-en="Travel">旅行</h4><p class="text-xs text-stone-400" data-zh="丽江·张家界·川西" data-en="Lijiang·Zhangjiajie·Sichuan">丽江·张家界·川西</p></div>
+        <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="2"><div class="text-3xl mb-3 hobby-emoji">✈️</div><h4 class="font-semibold text-sm mb-1" data-zh="旅行" data-en="Travel">旅行</h4><p class="text-xs text-stone-400" data-zh="新西兰·川西·丽江" data-en="New Zealand·Sichuan·Lijiang">新西兰·川西·丽江</p></div>
         <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="3"><div class="text-3xl mb-3 hobby-emoji">🍜</div><h4 class="font-semibold text-sm mb-1" data-zh="探店" data-en="Foodie">探店</h4><p class="text-xs text-stone-400" data-zh="上海的馆子吃了大半" data-en="Half of Shanghai, tasted">上海的馆子吃了大半</p></div>
         <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="4"><div class="text-3xl mb-3 hobby-emoji">⛺</div><h4 class="font-semibold text-sm mb-1" data-zh="露营" data-en="Camping">露营</h4><p class="text-xs text-stone-400" data-zh="星空下的自由" data-en="Under the stars">星空下的自由</p></div>
         <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="5"><div class="text-3xl mb-3 hobby-emoji">🎿</div><h4 class="font-semibold text-sm mb-1" data-zh="滑雪" data-en="Skiing">滑雪</h4><p class="text-xs text-stone-400" data-zh="冬天的仪式感" data-en="Winter ritual">冬天的仪式感</p></div>
@@ -575,6 +638,42 @@
         <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="7"><div class="text-3xl mb-3 hobby-emoji">🎮</div><h4 class="font-semibold text-sm mb-1" data-zh="游戏" data-en="Gaming">游戏</h4><p class="text-xs text-stone-400" data-zh="想玩可以带你" data-en="Happy to carry you">想玩可以带你</p></div>
         <div class="reveal card hobby-card p-6 text-center hover:border-accent" data-delay="7"><div class="text-3xl mb-3 hobby-emoji">💻</div><h4 class="font-semibold text-sm mb-1">Vibe Coding</h4><p class="text-xs text-stone-400" data-zh="这个网站就是产物" data-en="This site is one result">这个网站就是产物</p></div>
       </div>
+    </div>
+  </section>
+
+  <!-- ═══ NEW ZEALAND CHAPTER ═══ -->
+  <section id="nz" class="nz-chapter pt-56 pb-56 px-6">
+    <div class="nz-stars" aria-hidden="true"></div>
+    <div class="nz-stars b" aria-hidden="true"></div>
+    <div class="max-w-6xl mx-auto">
+      <div class="reveal text-center mb-16">
+        <span class="eyebrow" data-zh="最近一站 · 2026 年 10 月" data-en="Latest stop · October 2026">最近一站 · 2026 年 10 月</span>
+        <h2 class="font-serif text-4xl sm:text-6xl font-bold mt-4"><span data-zh="新西兰" data-en="New Zealand">新西兰</span> <em data-zh="南半球来信" data-en="letters from the south">南半球来信</em></h2>
+        <p class="lede text-sm sm:text-base mt-5 max-w-2xl mx-auto leading-relaxed" style="text-wrap:balance" data-zh="白天在北岛逛霍比屯、爬伊甸山看奥克兰，到了南岛看雪山和湖。最难忘的是晚上，抬头就是银河。" data-en="Days on the North Island — Hobbiton, Mt Eden over Auckland. Then snow peaks and lakes down south. But the nights were the best part: look up, and there's the Milky Way.">白天在北岛逛霍比屯、爬伊甸山看奥克兰，到了南岛看雪山和湖。最难忘的是晚上，抬头就是银河。</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px] sm:auto-rows-[240px]">
+        <div class="reveal photo-card col-span-2 row-span-2 md:col-start-2 md:row-start-1">
+          <img src="images/nz-hobbiton.jpg" alt="Asher at Hobbiton" class="w-full h-full object-cover object-[60%_center]" loading="lazy">
+          <div class="nz-pill"><small>Hobbiton · Matamata</small><span data-zh="🧙 霍比屯，去了趟中土世界" data-en="🧙 A day trip to Middle-earth">🧙 霍比屯，去了趟中土世界</span></div>
+        </div>
+        <div class="reveal photo-card row-span-2 md:col-start-1 md:row-start-1" data-delay="1">
+          <img src="images/nz-tekapo.jpg" alt="Milky Way over the Church of the Good Shepherd, Lake Tekapo" class="w-full h-full object-cover object-[center_75%]" loading="lazy">
+          <div class="nz-pill"><small>Lake Tekapo</small><span data-zh="⛪ 好牧羊人教堂上空的银河" data-en="⛪ Milky Way over the Good Shepherd">⛪ 好牧羊人教堂上空的银河</span></div>
+        </div>
+        <div class="reveal photo-card row-span-2 md:col-start-4 md:row-start-1" data-delay="2">
+          <img src="images/nz-aurora.jpg" alt="Aurora Australis and the Milky Way" class="w-full h-full object-cover" loading="lazy">
+          <div class="nz-pill"><small>Aurora Australis</small><span data-zh="🌌 南极光和银河同框" data-en="🌌 Southern lights meet the Milky Way">🌌 南极光和银河同框</span></div>
+        </div>
+        <div class="reveal photo-card col-span-2 md:row-start-3 md:col-start-1" data-delay="1">
+          <img src="images/nz-auckland.jpg" alt="Asher on Mt Eden overlooking Auckland" class="w-full h-full object-cover object-[center_58%]" loading="lazy">
+          <div class="nz-pill"><small>Mt Eden · Auckland</small><span data-zh="🌇 伊甸山上，看整个奥克兰" data-en="🌇 All of Auckland from Mt Eden">🌇 伊甸山上，看整个奥克兰</span></div>
+        </div>
+        <div class="reveal photo-card col-span-2 md:row-start-3 md:col-start-3" data-delay="2">
+          <img src="images/nz-milkyway.jpg" alt="The Milky Way, New Zealand" class="w-full h-full object-cover object-[center_45%]" loading="lazy">
+          <div class="nz-pill"><small>Southern Sky</small><span data-zh="✨ 南半球的银河，比想象中亮" data-en="✨ Brighter than I imagined">✨ 南半球的银河，比想象中亮</span></div>
+        </div>
+      </div>
+      <p class="reveal nz-coda text-center text-lg sm:text-xl mt-16 leading-relaxed"><span data-zh="一个人看过的星空，" data-en="I've seen this sky alone. ">一个人看过的星空，</span><b data-zh="下次想带你一起看。" data-en="Next time, I'd like to see it with you.">下次想带你一起看。</b></p>
     </div>
   </section>
 
@@ -1408,8 +1507,10 @@
           lastTrail=now;trailCount++;
           var t=document.createElement('span');
           t.className='trail-petal';
-          t.textContent=Math.random()<0.6?'🌸':(Math.random()<0.5?'✨':'·');
+          var night=document.body.classList.contains('is-night');
+          t.textContent=night?(Math.random()<0.5?'✦':(Math.random()<0.5?'✨':'·')):(Math.random()<0.6?'🌸':(Math.random()<0.5?'✨':'·'));
           t.style.cssText='left:'+mx+'px;top:'+my+'px;font-size:'+(8+Math.random()*10)+'px;opacity:0.8';
+          if(night)t.style.color='#f6d6a8';
           t.style.setProperty('--tx',((Math.random()-0.5)*60).toFixed(0)+'px');
           t.style.setProperty('--ty',(30+Math.random()*50).toFixed(0)+'px');
           t.style.setProperty('--tr',((Math.random()-0.5)*240).toFixed(0)+'deg');
@@ -1490,6 +1591,146 @@
       op.addEventListener('click',finish);
     })();
 
+    /* ═══ E. Night sky: twinkling stars, shooting stars, wishes ═══ */
+    (function(){
+      var hero=document.getElementById('nightHero');
+      var cv=document.getElementById('starCanvas');
+      var photo=document.getElementById('nightPhoto');
+      if(!hero||!cv||!cv.getContext)return;
+      var ctx=cv.getContext('2d');
+      var reduced=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+      var fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+      var dpr=Math.min(window.devicePixelRatio||1,2);
+      var W=0,H=0,stars=[],meteors=[],sprites={};
+      var mx=0,my=0,px=0,py=0,visible=true,nextMeteor=0,last=0;
+      var tints=['255,255,255','255,240,220','210,225,255','255,226,179'];
+
+      // pre-rendered soft star sprites, one per tint
+      tints.forEach(function(c){
+        var s=document.createElement('canvas');s.width=s.height=32;
+        var g=s.getContext('2d'),r=g.createRadialGradient(16,16,0,16,16,16);
+        r.addColorStop(0,'rgba('+c+',1)');r.addColorStop(0.18,'rgba('+c+',0.85)');r.addColorStop(0.45,'rgba('+c+',0.18)');r.addColorStop(1,'rgba('+c+',0)');
+        g.fillStyle=r;g.fillRect(0,0,32,32);sprites[c]=s;
+      });
+
+      function resize(){
+        W=hero.offsetWidth;H=hero.offsetHeight;
+        cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        var n=Math.min(520,Math.round(W*H/(W<640?2600:2200)));
+        stars=[];
+        for(var i=0;i<n;i++){
+          var big=Math.random()<0.06;
+          stars.push({
+            x:Math.random()*W,y:Math.random()*H*0.85,
+            s:big?(5+Math.random()*7):(1.6+Math.pow(Math.random(),2.2)*4),
+            a:0.35+Math.random()*0.65,
+            sp:0.4+Math.random()*1.8,ph:Math.random()*6.28,
+            d:big?1:(0.25+Math.random()*0.6),
+            c:tints[Math.random()<0.62?0:(1+Math.floor(Math.random()*3))]
+          });
+        }
+        if(reduced)draw(0,0);
+      }
+
+      function launch(x,y,big){
+        var dir=Math.random()<0.5?-1:1;
+        var ang=(18+Math.random()*22)*Math.PI/180;
+        var v=big?1.15:(0.75+Math.random()*0.5);
+        meteors.push({x:x,y:y,ux:Math.cos(ang)*dir,uy:Math.sin(ang),v:v,len:big?260:(120+Math.random()*140),t:0,life:big?1300:(900+Math.random()*500),w:big?2.2:1.4});
+      }
+
+      function draw(t,dt){
+        ctx.clearRect(0,0,W,H);
+        px+=(mx-px)*0.04;py+=(my-py)*0.04;
+        for(var i=0;i<stars.length;i++){
+          var st=stars[i];
+          var tw=reduced?1:(0.55+0.45*Math.sin(t*0.001*st.sp+st.ph));
+          ctx.globalAlpha=st.a*tw;
+          ctx.drawImage(sprites[st.c],st.x+px*st.d*14-st.s/2,st.y+py*st.d*10-st.s/2,st.s,st.s);
+        }
+        ctx.globalAlpha=1;
+        for(var j=meteors.length-1;j>=0;j--){
+          var m=meteors[j];
+          m.t+=dt;var k=m.t/m.life;
+          if(k>=1){meteors.splice(j,1);continue}
+          var hx=m.x+m.ux*m.v*m.t,hy=m.y+m.uy*m.v*m.t;
+          var tl=Math.min(m.len,m.v*m.t);
+          var tx=hx-m.ux*tl,ty=hy-m.uy*tl;
+          var fade=k<0.15?k/0.15:(1-(k-0.15)/0.85);
+          var g=ctx.createLinearGradient(hx,hy,tx,ty);
+          g.addColorStop(0,'rgba(255,244,222,'+(0.95*fade)+')');g.addColorStop(0.25,'rgba(246,214,168,'+(0.45*fade)+')');g.addColorStop(1,'rgba(246,214,168,0)');
+          ctx.strokeStyle=g;ctx.lineWidth=m.w;ctx.lineCap='round';
+          ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(tx,ty);ctx.stroke();
+          ctx.globalAlpha=fade;ctx.drawImage(sprites['255,240,220'],hx-7,hy-7,14,14);ctx.globalAlpha=1;
+        }
+      }
+
+      function loop(t){
+        var dt=Math.min(50,last?t-last:16);last=t;
+        if(visible&&!document.hidden){
+          if(t>nextMeteor){
+            if(nextMeteor)launch(W*(0.15+Math.random()*0.7),H*(0.04+Math.random()*0.3),false);
+            nextMeteor=t+4500+Math.random()*6000;
+          }
+          draw(t,dt);
+        }
+        requestAnimationFrame(loop);
+      }
+
+      resize();
+      var rt,lastW=innerWidth;
+      // ignore height-only resizes (mobile URL bar) so stars don't reshuffle
+      window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(innerWidth!==lastW||hero.offsetHeight>H+80){lastW=innerWidth;resize()}},150)});
+      if(reduced)return;
+      new IntersectionObserver(function(e){visible=e[0].isIntersecting}).observe(hero);
+      if(fine)hero.addEventListener('mousemove',function(e){mx=e.clientX/innerWidth-0.5;my=e.clientY/innerHeight-0.5},{passive:true});
+      // tap the sky to send a wish
+      hero.addEventListener('click',function(e){
+        if(e.target.closest('a,button,.photo-card,.live-card'))return;
+        var r=hero.getBoundingClientRect();
+        launch(e.clientX-r.left,e.clientY-r.top,true);
+      });
+      // slow parallax for the photo layer
+      window.addEventListener('scroll',function(){
+        var y=window.scrollY;
+        if(y<H&&photo)photo.style.translate='0 '+(y*0.28).toFixed(1)+'px';
+      },{passive:true});
+      requestAnimationFrame(loop);
+    })();
+
+    // nav + cursor trail switch to "night mode" while the hero is on screen
+    (function(){
+      var hero=document.getElementById('nightHero'),nz=document.getElementById('nz');
+      if(!hero)return;
+      function check(){
+        var y=window.scrollY,night=y<hero.offsetHeight*0.72-60;
+        // the dark part of the NZ chapter starts/ends ~220px inside its edges
+        if(nz&&y>nz.offsetTop+160&&y<nz.offsetTop+nz.offsetHeight-280)night=true;
+        document.body.classList.toggle('is-night',night);
+      }
+      window.addEventListener('scroll',check,{passive:true});check();
+    })();
+
+    /* ═══ F. Static star tiles for the New Zealand chapter ═══ */
+    (function(){
+      var layers=document.querySelectorAll('.nz-stars');
+      if(!layers.length)return;
+      function tile(size,n){
+        var c=document.createElement('canvas');c.width=c.height=size;
+        var g=c.getContext('2d');
+        for(var i=0;i<n;i++){
+          var r=Math.random()<0.08?1.3:(0.35+Math.random()*0.6);
+          g.fillStyle='rgba(255,'+(235+Math.floor(Math.random()*20))+','+(215+Math.floor(Math.random()*40))+','+(0.35+Math.random()*0.6).toFixed(2)+')';
+          g.beginPath();g.arc(Math.random()*size,Math.random()*size,r,0,6.283);g.fill();
+        }
+        return 'url('+c.toDataURL()+')';
+      }
+      layers[0].style.backgroundImage=tile(420,90);
+      layers[0].style.backgroundSize='420px 420px';
+      if(layers[1]){layers[1].style.backgroundImage=tile(300,26);layers[1].style.backgroundSize='300px 300px'}
+    })();
+
     /* ═══ D. Micro-interactions ═══ */
     // magnetic buttons
     (function(){
@@ -1511,7 +1752,7 @@
     (function(){
       var track=document.getElementById('marqueeTrack');
       if(!track)return;
-      var items=['🚗 自驾游','✈️ 旅行','🍜 探店','⛺ 露营','🎿 滑雪','🏊 游泳','🎮 游戏','💻 Vibe Coding','🐱 撸猫','📍 上海'];
+      var items=['🚗 自驾游','✈️ 旅行','🌌 看银河','🍜 探店','⛺ 露营','🎿 滑雪','🏊 游泳','🎮 游戏','💻 Vibe Coding','🐱 撸猫','📍 上海'];
       var html='';
       items.concat(items).forEach(function(it){html+='<span>'+it+'</span>'});
       track.innerHTML=html;
