@@ -1273,25 +1273,28 @@
     var CAT_NS='asher_fmc',CAT_KEY='coco_pets';
     var catCount=0;
     var catEmojis=['🐾','💛','✨','😻','🧡','💫'];
-    var catPetting=false;
+    var catPetting=false,catPending=0;
+    function showCatCount(){var c=document.getElementById('catCounter');if(c)c.textContent=catCount.toLocaleString();}
     // load global total on page load (read-only, no increment)
     fetch(CAT_API+'/get/'+CAT_NS+'/'+CAT_KEY).then(function(r){return r.json()}).then(function(d){
-      if(d&&typeof d.value==='number'){catCount=d.value;var c=document.getElementById('catCounter');if(c)c.textContent=catCount.toLocaleString();}
+      if(d&&typeof d.value==='number'){catCount=d.value+catPending;showCatCount();}
     }).catch(function(){/* offline: keep 0 */});
+    // one /hit per pet, sent one at a time so rapid clicks are never dropped
+    function flushCatHits(){
+      if(catPetting||catPending<=0)return;
+      catPetting=true;
+      fetch(CAT_API+'/hit/'+CAT_NS+'/'+CAT_KEY).then(function(r){if(!r.ok)throw r;return r.json()}).then(function(d){
+        catPending--;
+        if(d&&typeof d.value==='number'){catCount=d.value+catPending;showCatCount();}
+        catPetting=false;flushCatHits();
+      }).catch(function(){catPetting=false;setTimeout(flushCatHits,2000);});
+    }
     function petCat(e){
       // ── counter: optimistic bump + global sync ──
-      catCount++;
+      catCount++;catPending++;
       var counter=document.getElementById('catCounter');
       if(counter){counter.textContent=catCount.toLocaleString();counter.classList.remove('counter-pop');void counter.offsetWidth;counter.classList.add('counter-pop');}
-      if(!catPetting){
-        catPetting=true;
-        setTimeout(function(){
-          fetch(CAT_API+'/hit/'+CAT_NS+'/'+CAT_KEY).then(function(r){return r.json()}).then(function(d){
-            if(d&&typeof d.value==='number'){catCount=d.value;if(counter)counter.textContent=catCount.toLocaleString();}
-            catPetting=false;
-          }).catch(function(){catPetting=false;});
-        },400);
-      }
+      flushCatHits();
       // ── combo tracking: every 5 pets in this session → super easter egg ──
       petCombo++;
       if(petCombo%5===0){fxSuper();return;}
